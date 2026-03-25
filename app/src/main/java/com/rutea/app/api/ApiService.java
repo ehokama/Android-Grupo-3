@@ -1,8 +1,8 @@
-package com.example.xplorernow.api;
+package com.rutea.app.api;
 
-import com.example.xplorernow.models.Actividad;
-import com.example.xplorernow.models.Destino;
-import com.example.xplorernow.models.Disponibilidad;
+import com.rutea.app.models.Actividad;
+import com.rutea.app.models.Destino;
+import com.rutea.app.models.Disponibilidad;
 
 import java.util.List;
 

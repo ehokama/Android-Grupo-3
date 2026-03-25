@@ -1,4 +1,4 @@
-package com.example.xplorernow.api;
+package com.rutea.app.api;
 
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;

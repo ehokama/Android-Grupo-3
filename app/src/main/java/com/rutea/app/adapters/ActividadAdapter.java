@@ -1,4 +1,4 @@
-package com.example.xplorernow.adapters;
+package com.rutea.app.adapters;
 
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
@@ -7,8 +7,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.example.xplorernow.databinding.ItemActividadBinding;
-import com.example.xplorernow.models.Actividad;
+import com.rutea.app.databinding.ItemActividadBinding;
+import com.rutea.app.models.Actividad;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.example.xplorernow;
+package com.rutea.app;
 
 import org.junit.Test;
 
