@@ -16,6 +16,7 @@
 
         <activity
             android:name=".activities.LoginActivity"
+            android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -26,6 +27,12 @@
         <activity android:name=".activities.MainActivity" android:exported="false" />
         <activity android:name=".activities.RegisterActivity" android:exported="false" />
         <activity android:name=".activities.SearchActivity" android:exported="false" />
+        <activity android:name=".HomeActivity" />
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:theme="@style/Theme.XplorerNow" />
 
     </application>
 
