@@ -1,4 +1,4 @@
-package com.example.xplorernow;
+package com.rutea.app;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -12,11 +12,11 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
-import com.example.xplorernow.adapters.ActividadAdapter;
-import com.example.xplorernow.api.RetrofitClient;
-import com.example.xplorernow.databinding.FragmentFirstBinding;
-import com.example.xplorernow.models.Actividad;
-import com.example.xplorernow.models.Destino;
+import com.rutea.app.adapters.ActividadAdapter;
+import com.rutea.app.api.RetrofitClient;
+import com.rutea.app.databinding.FragmentFirstBinding;
+import com.rutea.app.models.Actividad;
+import com.rutea.app.models.Destino;
 
 import java.util.ArrayList;
 import java.util.List;

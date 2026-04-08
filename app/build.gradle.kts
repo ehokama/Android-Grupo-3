@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.xplorernow"
+    namespace = "com.rutea.app"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.xplorernow"
+        applicationId = "com.rutea.app"
         minSdk = 30
         targetSdk = 35
         versionCode = 1

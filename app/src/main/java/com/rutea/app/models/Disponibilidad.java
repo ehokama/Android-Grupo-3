@@ -1,7 +1,6 @@
-package com.example.xplorernow.models;
+package com.rutea.app.models;
 
 import com.google.gson.annotations.SerializedName;
-import java.util.Date;
 
 public class Disponibilidad {
     @SerializedName("id_disponibilidad")
