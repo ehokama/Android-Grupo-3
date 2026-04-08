@@ -15,7 +15,7 @@
         android:theme="@style/Theme.XplorerNow">
 
         <activity
-            android:name=".activities.LoginActivity"
+            android:name=".activitiesandviews.ui.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -23,9 +23,6 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".activities.MainActivity" android:exported="false" />
-        <activity android:name=".activities.RegisterActivity" android:exported="false" />
-        <activity android:name=".activities.SearchActivity" android:exported="false" />
 
     </application>
 
