@@ -1,20 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/auth_nav_graph"
     app:startDestination="@id/loginFragment">
 
     <fragment
         android:id="@+id/loginFragment"
-        android:name="com.rutea.app.activitiesandviews.ui.auth.LoginFragment"
-        android:label="Login"
-        tools:layout="@layout/fragment_login">
-
+        android:name="com.rutea.app.activitiesandviews.ui.auth.LoginFragment">
         <action
             android:id="@+id/action_auth_to_home"
+            app:destination="@id/home_nav_graph"
             app:popUpTo="@id/auth_nav_graph"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_login_to_register"
+            app:destination="@id/registerFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/registerFragment"
+        android:name="com.rutea.app.activitiesandviews.ui.auth.RegisterFragment">
+        <action
+            android:id="@+id/action_register_to_login"
+            app:destination="@id/loginFragment"/>
     </fragment>
 
 </navigation>

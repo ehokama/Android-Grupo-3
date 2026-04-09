@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#F5F5F5"
     android:fillViewport="true">
 
     <LinearLayout
@@ -11,80 +11,84 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- HERO: imagen de fondo + searchbar      -->
+        <!-- HERO con imagen de fondo -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="280dp">
 
             <ImageView
-                android:id="@+id/ivHero"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:contentDescription="Paisaje"
                 android:scaleType="centerCrop"
-                android:src="@drawable/ic_background_tour"/>
+                android:src="@drawable/bg_hero_landscape" />
 
-            <!-- Overlay oscuro para que el texto se lea bien -->
+            <!-- Overlay oscuro -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="#66000000"/>
+                android:background="#88000000" />
 
-            <!-- Contenido sobre la imagen -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:gravity="center"
                 android:orientation="vertical"
-                android:gravity="bottom"
-                android:padding="16dp">
+                android:padding="24dp">
 
                 <TextView
-                    android:id="@+id/tvHeroTitle"
+                    android:id="@+id/tvGreeting"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Rutea"
-                    android:textColor="@android:color/white"
+                    android:text="Hola 👋"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center"
+                    android:text="¿A dónde querés ir hoy?"
+                    android:textColor="#FFFFFF"
                     android:textSize="26sp"
-                    android:textStyle="bold"/>
+                    android:textStyle="bold" />
 
-                <TextView
-                    android:id="@+id/tvHeroSubtitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Tours y actividades para tu próxima aventura"
-                    android:textColor="@android:color/white"
-                    android:textSize="14sp"
-                    android:layout_marginTop="4dp"/>
-
-                <!-- Searchbar -->
+                <!-- Barra de búsqueda -->
                 <androidx.cardview.widget.CardView
-                    android:id="@+id/cvSearch"
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="16dp"
-                    app:cardCornerRadius="24dp"
-                    app:cardElevation="4dp">
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    app:cardCornerRadius="32dp"
+                    app:cardElevation="6dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:orientation="horizontal"
+                        android:layout_height="wrap_content"
                         android:gravity="center_vertical"
-                        android:paddingStart="16dp">
+                        android:orientation="horizontal"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="8dp"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp">
 
                         <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@android:drawable/ic_menu_search"/>
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:contentDescription="Buscar"
+                            android:src="@android:drawable/ic_menu_search" />
 
-                        <TextView
+                        <EditText
                             android:id="@+id/etSearch"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:gravity="center_vertical"
-                            android:paddingStart="8dp"
-                            android:text="¿Qué querés hacer?"
-                            android:textColor="@android:color/darker_gray"
-                            android:textSize="14sp"/>
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:background="@null"
+                            android:hint="Buscá destinos o actividades"
+                            android:inputType="text"
+                            android:maxLines="1"
+                            android:textSize="15sp" />
 
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
@@ -92,83 +96,84 @@
             </LinearLayout>
         </FrameLayout>
 
-        <!-- SECCIÓN: Tours más reservados          -->
+        <!-- SECCIONES -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="16dp">
 
+            <!-- Destinos más famosos -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Tours más reservados"
-                android:textSize="18sp"
-                android:textStyle="bold"/>
+                android:layout_marginTop="8dp"
+                android:text="🌍 Destinos más famosos"
+                android:textColor="#212121"
+                android:textSize="17sp"
+                android:textStyle="bold" />
 
-            <!-- RecyclerView horizontal — las tarjetas de tours -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvToursDestacados"
+            <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:orientation="horizontal"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
+                android:scrollbars="none">
 
-        </LinearLayout>
+                <LinearLayout
+                    android:id="@+id/llDestinos"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
 
-        <!-- SECCIÓN: Categorías                    -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="16dp">
-
+            <!-- Actividades recomendadas -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Explorar por categoría"
-                android:textSize="18sp"
-                android:textStyle="bold"/>
+                android:layout_marginTop="24dp"
+                android:text="⭐ Recomendadas para vos"
+                android:textColor="#212121"
+                android:textSize="17sp"
+                android:textStyle="bold" />
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvCategorias"
+            <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:orientation="horizontal"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
+                android:scrollbars="none">
 
-        </LinearLayout>
+            <LinearLayout
+                android:id="@+id/llRecomendadas"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
 
-        <!-- SECCIÓN: Destinos más visitados        -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="96dp">
+            </HorizontalScrollView>
 
+            <!-- Más reservadas -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Destinos más visitados"
-                android:textSize="18sp"
-                android:textStyle="bold"/>
+                android:layout_marginTop="24dp"
+                android:text="🔥 Más reservadas"
+                android:textColor="#212121"
+                android:textSize="17sp"
+                android:textStyle="bold" />
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvDestinos"
+            <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:orientation="horizontal"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/llMasReservadas"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"/>
+
+            </HorizontalScrollView>
 
         </LinearLayout>
-
     </LinearLayout>
-
-</androidx.core.widget.NestedScrollView>
+</ScrollView>
