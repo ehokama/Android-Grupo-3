@@ -43,7 +43,7 @@ public class ConfirmationFragment extends Fragment {
             ((TextView) view.findViewById(R.id.tvResPersonas)).setText("👥 " + personas + " persona(s)");
         }
 
-        // Botón confirmar pago — por ahora simula éxito y vuelve al home
+        // btn de confirmaciond e pago — por ahora retorna al home, queda pendiente pago
         view.findViewById(R.id.btnPagar).setOnClickListener(v ->
                 Navigation.findNavController(view)
                         .navigate(R.id.action_confirmation_to_home)

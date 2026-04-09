@@ -41,31 +41,31 @@ public class ReservationFragment extends Fragment {
                 ? getArguments().getString("nombre", "Actividad") : "Actividad";
         ((TextView) view.findViewById(R.id.tvNombreActividad)).setText(nombreActividad);
 
-        // --- Spinner Día ---
+        // --- dia ---
         Spinner spinnerDia = view.findViewById(R.id.spinnerDia);
         List<String> dias = new ArrayList<>();
         for (int i = 1; i <= 31; i++) dias.add(String.format("%02d", i));
         spinnerDia.setAdapter(simpleAdapter(dias));
 
-        // --- Spinner Mes ---
+        // --- mes ---
         Spinner spinnerMes = view.findViewById(R.id.spinnerMes);
         String[] meses = {"Enero","Febrero","Marzo","Abril","Mayo","Junio",
                 "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"};
         spinnerMes.setAdapter(simpleAdapter(java.util.Arrays.asList(meses)));
 
-        // --- Spinner Año (actual y siguiente) ---
+        // --- año ---
         Spinner spinnerAnio = view.findViewById(R.id.spinnerAnio);
         int anioActual = Calendar.getInstance().get(Calendar.YEAR);
         spinnerAnio.setAdapter(simpleAdapter(
                 java.util.Arrays.asList(String.valueOf(anioActual), String.valueOf(anioActual + 1))));
 
-        // --- Spinner Horario ---
+        // --- horario ---
         Spinner spinnerHorario = view.findViewById(R.id.spinnerHorario);
         List<String> horarios = new ArrayList<>();
         for (int h = 8; h <= 20; h++) horarios.add(String.format("%02d:00", h));
         spinnerHorario.setAdapter(simpleAdapter(horarios));
 
-        // --- Contador personas ---
+        // --- cupo personas ---
         tvPersonas = view.findViewById(R.id.tvPersonas);
         view.findViewById(R.id.btnMenos).setOnClickListener(v -> {
             if (personas > 1) tvPersonas.setText(String.valueOf(--personas));
@@ -74,7 +74,7 @@ public class ReservationFragment extends Fragment {
             if (personas < 20) tvPersonas.setText(String.valueOf(++personas));
         });
 
-        // --- Confirmar ---
+        // --- confirmacion ---
         view.findViewById(R.id.btnConfirmar).setOnClickListener(v -> {
             String dia     = (String) spinnerDia.getSelectedItem();
             String mes     = (String) spinnerMes.getSelectedItem();

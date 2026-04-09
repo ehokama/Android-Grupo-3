@@ -18,7 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 public class HomeFragment extends Fragment {
 
-    // Modelo simple de actividad
+    // modelo simple de actividad
     static class Actividad {
         String nombre, descripcion, horario, ubicacion, costo, guia, empresa;
         int imagen;

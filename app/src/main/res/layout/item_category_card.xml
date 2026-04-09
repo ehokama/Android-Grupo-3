@@ -19,7 +19,6 @@
             android:scaleType="centerCrop"
             android:src="@drawable/card_example" />
 
-        <!-- Gradiente inferior -->
         <View
             android:layout_width="match_parent"
             android:layout_height="80dp"

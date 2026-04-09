@@ -10,10 +10,24 @@
         android:name="com.rutea.app.activitiesandviews.ui.home.HomeFragment"
         android:label="Home"
         tools:layout="@layout/fragment_home">
-
         <action
             android:id="@+id/action_home_to_detail"
             app:destination="@id/activityDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/myActivitiesFragment"
+        android:name="com.rutea.app.activitiesandviews.ui.myActivities.MyActivitiesFragment"
+        android:label="Mis viajes">
+    </fragment>
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.rutea.app.activitiesandviews.ui.profile.ProfileFragment"
+        android:label="Perfil">
+        <action
+            android:id="@+id/action_profile_to_myActivities"
+            app:destination="@id/myActivitiesFragment"/>
     </fragment>
 
     <fragment
@@ -25,6 +39,7 @@
             android:id="@+id/action_detail_to_reservation"
             app:destination="@id/reservationFragment" />
     </fragment>
+
     <fragment
         android:id="@+id/reservationFragment"
         android:name="com.rutea.app.activitiesandviews.ui.reservation.ReservationFragment"
@@ -40,14 +55,11 @@
         android:name="com.rutea.app.activitiesandviews.ui.confirmation.ConfirmationFragment"
         android:label="Confirmación"
         tools:layout="@layout/fragment_confirmation">
-
         <action
             android:id="@+id/action_confirmation_to_home"
             app:destination="@id/homeFragment"
             app:popUpTo="@id/homeFragment"
             app:popUpToInclusive="true" />
     </fragment>
-
-
 
 </navigation>
