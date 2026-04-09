@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="#F5F5F5">
 
-    <!-- Imagen hero con scroll colapsable -->
+    <!-- hero -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
@@ -47,7 +47,7 @@
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- Contenido scrolleable -->
+    <!-- scrolleable -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -61,7 +61,7 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <!-- Descripción -->
+            <!-- descripc -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -80,7 +80,6 @@
                 android:textSize="14sp"
                 android:lineSpacingExtra="4dp" />
 
-            <!-- Divider -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -88,7 +87,7 @@
                 android:layout_marginBottom="16dp"
                 android:background="#E0E0E0" />
 
-            <!-- Info chips -->
+            <!-- info -->
             <TextView
                 android:id="@+id/tvHorario"
                 android:layout_width="wrap_content"
@@ -136,7 +135,7 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Botón reservar fijo abajo -->
+    <!-- reserva btn -->
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
