@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -30,6 +31,7 @@ public class LoginFragment extends Fragment {
 
         EditText etNombre = view.findViewById(R.id.etNombre);
         Button btnIngresar = view.findViewById(R.id.btnIngresar);
+        TextView textRegistro = view.findViewById(R.id.tvRegistrate);
 
         btnIngresar.setOnClickListener(v -> {
             String username = etNombre.getText().toString().trim();
@@ -39,6 +41,16 @@ public class LoginFragment extends Fragment {
 
             Navigation.findNavController(view)
                     .navigate(R.id.action_auth_to_home, args);
+        });
+
+        textRegistro.setOnClickListener(v -> {
+            String username = etNombre.getText().toString().trim();
+
+            Bundle args = new Bundle();
+            args.putString("username", username);
+
+            Navigation.findNavController(view)
+                    .navigate(R.id.action_login_to_register, args);
         });
     }
 }

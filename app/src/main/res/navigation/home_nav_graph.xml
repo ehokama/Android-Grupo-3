@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/home_nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.rutea.app.activitiesandviews.ui.home.HomeFragment"
+        android:label="Home"
+        tools:layout="@layout/fragment_home">
+
+        <action
+            android:id="@+id/action_home_to_detail"
+            app:destination="@id/activityDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/activityDetailFragment"
+        android:name="com.rutea.app.activitiesandviews.ui.activityDetail.ActivityDetailFragment"
+        android:label="Detalle"
+        tools:layout="@layout/fragment_activity_detail">
+        <action
+            android:id="@+id/action_detail_to_reservation"
+            app:destination="@id/reservationFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/reservationFragment"
+        android:name="com.rutea.app.activitiesandviews.ui.reservation.ReservationFragment"
+        android:label="Reservation"
+        tools:layout="@layout/fragment_reservation">
+        <action
+            android:id="@+id/action_reservation_to_confirmation"
+            app:destination="@id/confirmationFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/confirmationFragment"
+        android:name="com.rutea.app.activitiesandviews.ui.confirmation.ConfirmationFragment"
+        android:label="Confirmación"
+        tools:layout="@layout/fragment_confirmation">
+
+        <action
+            android:id="@+id/action_confirmation_to_home"
+            app:destination="@id/homeFragment"
+            app:popUpTo="@id/homeFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+
+
+</navigation>
