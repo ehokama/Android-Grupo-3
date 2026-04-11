@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -14,24 +15,20 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.rutea.app.R;
-import java.util.Arrays;
+import com.rutea.app.activitiesandviews.ui.data.network.ActivityApiService;
+import com.rutea.app.activitiesandviews.ui.data.network.RetrofitClient;
+import com.rutea.app.activitiesandviews.ui.data.network.dto.activity.ActivityDto;
+import com.rutea.app.activitiesandviews.ui.data.network.dto.common.PageResponse;
+
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class HomeFragment extends Fragment {
 
-    // modelo simple de actividad
-    static class Actividad {
-        String nombre, descripcion, horario, ubicacion, costo, guia, empresa;
-        int imagen;
-
-        Actividad(String nombre, String descripcion, String horario,
-                  String ubicacion, String costo, String guia,
-                  String empresa, int imagen) {
-            this.nombre = nombre; this.descripcion = descripcion;
-            this.horario = horario; this.ubicacion = ubicacion;
-            this.costo = costo; this.guia = guia;
-            this.empresa = empresa; this.imagen = imagen;
-        }
-    }
+    private ActivityApiService activityApiService;
 
     @Nullable
     @Override
@@ -50,55 +47,93 @@ public class HomeFragment extends Fragment {
         TextView tvGreeting = view.findViewById(R.id.tvGreeting);
         if (!username.isEmpty()) tvGreeting.setText("Hola, " + username + " 👋");
 
-        // Datos de ejemplo — reemplazá con tu fuente real
-        List<Actividad> destinos = Arrays.asList(
-                new Actividad("Buenos Aires", "La capital argentina", "09:00 - 18:00",
-                        "CABA", "$1500", "Carlos López", "RuteaTravel", R.drawable.bg_hero_landscape),
-                new Actividad("Mendoza", "Tierra del vino", "10:00 - 17:00",
-                        "Mendoza", "$2000", "Ana Martínez", "VinaTours", R.drawable.bg_hero_landscape)
-        );
+        RetrofitClient.init(requireContext());
+        activityApiService = RetrofitClient.createService(ActivityApiService.class);
 
-        List<Actividad> recomendadas = Arrays.asList(
-                new Actividad("Trekking en Patagonia", "Aventura en el sur", "07:00 - 15:00",
-                        "Bariloche", "$3500", "Pedro Sosa", "AventuraSur", R.drawable.bg_hero_landscape)
-        );
-
-        List<Actividad> masReservadas = Arrays.asList(
-                new Actividad("Cataratas del Iguazú", "Maravilla natural", "08:00 - 16:00",
-                        "Misiones", "$2800", "Laura Díaz", "NaturaTours", R.drawable.bg_hero_landscape)
-        );
-
-        // Inflar cards en cada sección
-        inflateCards(view, R.id.llDestinos, destinos);
-        inflateCards(view, R.id.llRecomendadas, recomendadas);
-        inflateCards(view, R.id.llMasReservadas, masReservadas);
+        loadPagedSection(view, R.id.llDestinos, null);
+        loadFeaturedSection(view, R.id.llRecomendadas);
+        loadPagedSection(view, R.id.llMasReservadas, "rating,desc");
     }
 
-    private void inflateCards(View root, int containerId, List<Actividad> actividades) {
+    private void loadPagedSection(View root, int containerId, @Nullable String sort) {
+        activityApiService.getActivities(
+                null,
+                null,
+                null,
+                null,
+                null,
+                0,
+                10,
+                sort
+        ).enqueue(new Callback<PageResponse<ActivityDto>>() {
+            @Override
+            public void onResponse(@NonNull Call<PageResponse<ActivityDto>> call, @NonNull Response<PageResponse<ActivityDto>> response) {
+                if (!isAdded()) {
+                    return;
+                }
+                if (response.isSuccessful() && response.body() != null) {
+                    renderCards(root, containerId, response.body().getContent());
+                } else {
+                    Toast.makeText(requireContext(), "No se pudo cargar actividades.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<PageResponse<ActivityDto>> call, @NonNull Throwable throwable) {
+                if (!isAdded()) {
+                    return;
+                }
+                Toast.makeText(requireContext(), "Error de red al cargar actividades.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void loadFeaturedSection(View root, int containerId) {
+        activityApiService.getFeaturedActivities().enqueue(new Callback<List<ActivityDto>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<ActivityDto>> call, @NonNull Response<List<ActivityDto>> response) {
+                if (!isAdded()) {
+                    return;
+                }
+                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    renderCards(root, containerId, response.body());
+                    return;
+                }
+                // fallback a listado general si featured viene vacío.
+                loadPagedSection(root, containerId, null);
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<List<ActivityDto>> call, @NonNull Throwable throwable) {
+                if (!isAdded()) {
+                    return;
+                }
+                loadPagedSection(root, containerId, null);
+            }
+        });
+    }
+
+    private void renderCards(View root, int containerId, List<ActivityDto> activities) {
         LinearLayout container = root.findViewById(containerId);
         LayoutInflater inflater = LayoutInflater.from(getContext());
+        container.removeAllViews();
 
-        for (Actividad a : actividades) {
+        for (ActivityDto activity : activities) {
             View card = inflater.inflate(R.layout.item_category_card, container, false);
 
-            // Tamaño fijo
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     dpToPx(160), dpToPx(120));
             params.setMarginEnd(dpToPx(12));
             card.setLayoutParams(params);
 
-            ((TextView) card.findViewById(R.id.tvCardLabel)).setText(a.nombre);
-            ((ImageView) card.findViewById(R.id.ivCard)).setImageResource(a.imagen);
+            String title = activity.getTitle() == null || activity.getTitle().isEmpty() ? "Actividad" : activity.getTitle();
+            ((TextView) card.findViewById(R.id.tvCardLabel)).setText(title);
+            ((ImageView) card.findViewById(R.id.ivCard)).setImageResource(R.drawable.bg_hero_landscape);
 
             card.setOnClickListener(v -> {
                 Bundle args = new Bundle();
-                args.putString("nombre",      a.nombre);
-                args.putString("descripcion", a.descripcion);
-                args.putString("horario",     a.horario);
-                args.putString("ubicacion",   a.ubicacion);
-                args.putString("costo",       a.costo);
-                args.putString("guia",        a.guia);
-                args.putString("empresa",     a.empresa);
+                args.putLong("activityId", activity.getId() == null ? -1L : activity.getId());
+                args.putString("nombre", title);
                 Navigation.findNavController(requireActivity(), R.id.nav_host_fragment)
                         .navigate(R.id.action_home_to_detail, args);
             });

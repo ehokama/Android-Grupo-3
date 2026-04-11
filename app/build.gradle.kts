@@ -44,6 +44,7 @@ dependencies {
     // Retrofit & Gson
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
+    implementation(libs.okhttp.logging)
     
     // Glide for images
     implementation(libs.glide)
