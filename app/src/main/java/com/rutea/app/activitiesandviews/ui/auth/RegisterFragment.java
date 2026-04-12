@@ -7,7 +7,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.HashSet;
@@ -19,9 +18,9 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.rutea.app.R;
-import com.rutea.app.activitiesandviews.ui.data.network.AuthApiService;
-import com.rutea.app.activitiesandviews.ui.data.network.dto.auth.AuthResponse;
-import com.rutea.app.activitiesandviews.ui.data.network.dto.auth.RegisterRequest;
+import com.rutea.app.activitiesandviews.data.network.AuthApiService;
+import com.rutea.app.activitiesandviews.data.models.dto.auth.AuthResponse;
+import com.rutea.app.activitiesandviews.data.models.dto.auth.RegisterRequest;
 
 import retrofit2.Call;
 import retrofit2.Callback;

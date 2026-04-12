@@ -16,11 +16,11 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.rutea.app.R;
-import com.rutea.app.activitiesandviews.ui.data.network.DisponibilityApiService;
-import com.rutea.app.activitiesandviews.ui.data.network.ReserveApiService;
-import com.rutea.app.activitiesandviews.ui.data.network.ReserveRequestFactory;
-import com.rutea.app.activitiesandviews.ui.data.network.dto.disponibility.DisponibilityDto;
-import com.rutea.app.activitiesandviews.ui.data.network.dto.reserve.ReserveDto;
+import com.rutea.app.activitiesandviews.data.network.DisponibilityApiService;
+import com.rutea.app.activitiesandviews.data.network.ReserveApiService;
+import com.rutea.app.activitiesandviews.data.network.ReserveRequestFactory;
+import com.rutea.app.activitiesandviews.data.models.dto.disponibility.DisponibilityDto;
+import com.rutea.app.activitiesandviews.data.models.dto.reserve.ReserveDto;
 
 import org.json.JSONObject;
 

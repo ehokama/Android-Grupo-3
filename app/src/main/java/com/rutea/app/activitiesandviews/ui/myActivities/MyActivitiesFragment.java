@@ -13,8 +13,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.rutea.app.R;
-import com.rutea.app.activitiesandviews.ui.data.network.ReserveApiService;
-import com.rutea.app.activitiesandviews.ui.data.network.dto.reserve.ReserveDto;
+import com.rutea.app.activitiesandviews.data.network.ReserveApiService;
+import com.rutea.app.activitiesandviews.data.models.dto.reserve.ReserveDto;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

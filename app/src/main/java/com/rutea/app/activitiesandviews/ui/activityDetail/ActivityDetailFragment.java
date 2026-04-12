@@ -14,8 +14,8 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.rutea.app.R;
-import com.rutea.app.activitiesandviews.ui.data.network.ActivityApiService;
-import com.rutea.app.activitiesandviews.ui.data.network.dto.activity.ActivityDto;
+import com.rutea.app.activitiesandviews.data.network.ActivityApiService;
+import com.rutea.app.activitiesandviews.data.models.dto.activity.ActivityDto;
 
 import retrofit2.Call;
 import retrofit2.Callback;
