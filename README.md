@@ -29,3 +29,19 @@ Configuraciones recomendadas:
 
 ### Nota
 El paquete legacy `com.rutea.app.api` quedo removido para evitar endpoints desactualizados.
+
+## Flujo reservas (Retrofit)
+
+### Endpoints usados
+- `GET /api/disponibilities` para elegir horarios con cupo.
+- `POST /api/reserves` para crear reserva.
+- `GET /api/reserves/my-history` para listar Mis viajes.
+- `POST /api/reserves/{id}/cancel` disponible en capa de red para fase de cancelacion.
+
+### Checklist manual de pruebas
+1. Loguearse en la app (token JWT activo).
+2. Entrar a Home y abrir el detalle de una actividad.
+3. Ir a Reservar, elegir horario y cantidad de personas, confirmar.
+4. Verificar llegada a pantalla de confirmacion.
+5. Abrir Mis viajes y validar que aparezca la nueva reserva.
+6. Validar caso sin cupo (mensaje de error amigable).
