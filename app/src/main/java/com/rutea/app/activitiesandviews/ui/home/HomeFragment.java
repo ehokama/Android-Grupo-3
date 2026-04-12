@@ -16,7 +16,6 @@ import androidx.navigation.Navigation;
 
 import com.rutea.app.R;
 import com.rutea.app.activitiesandviews.ui.data.network.ActivityApiService;
-import com.rutea.app.activitiesandviews.ui.data.network.RetrofitClient;
 import com.rutea.app.activitiesandviews.ui.data.network.dto.activity.ActivityDto;
 import com.rutea.app.activitiesandviews.ui.data.network.dto.common.PageResponse;
 
@@ -26,9 +25,14 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import dagger.hilt.android.AndroidEntryPoint;
+import javax.inject.Inject;
+
+@AndroidEntryPoint
 public class HomeFragment extends Fragment {
 
-    private ActivityApiService activityApiService;
+    @Inject
+    ActivityApiService activityApiService;
 
     @Nullable
     @Override
@@ -46,9 +50,6 @@ public class HomeFragment extends Fragment {
         String username = getArguments() != null ? getArguments().getString("username", "") : "";
         TextView tvGreeting = view.findViewById(R.id.tvGreeting);
         if (!username.isEmpty()) tvGreeting.setText("Hola, " + username + " 👋");
-
-        RetrofitClient.init(requireContext());
-        activityApiService = RetrofitClient.createService(ActivityApiService.class);
 
         loadPagedSection(view, R.id.llDestinos, null);
         loadFeaturedSection(view, R.id.llRecomendadas);

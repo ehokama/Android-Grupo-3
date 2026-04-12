@@ -16,15 +16,29 @@ import androidx.navigation.Navigation;
 
 import com.rutea.app.R;
 import com.rutea.app.activitiesandviews.ui.data.network.AuthApiService;
-import com.rutea.app.activitiesandviews.ui.data.network.RetrofitClient;
 import com.rutea.app.activitiesandviews.ui.data.network.dto.auth.AuthRequest;
 import com.rutea.app.activitiesandviews.ui.data.network.dto.auth.AuthResponse;
+import com.rutea.app.activitiesandviews.ui.data.network.dto.auth.OtpRequest;
+import com.rutea.app.activitiesandviews.ui.data.network.dto.auth.OtpVerificationRequest;
+
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import com.rutea.app.data.local.TokenManager;
+import dagger.hilt.android.AndroidEntryPoint;
+import javax.inject.Inject;
+
+@AndroidEntryPoint
 public class LoginFragment extends Fragment {
+
+    @Inject
+    TokenManager tokenManager;
+
+    @Inject
+    AuthApiService authApiService;
 
     @Nullable
     @Override
@@ -38,13 +52,14 @@ public class LoginFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        RetrofitClient.init(requireContext());
-        AuthApiService authApiService = RetrofitClient.createService(AuthApiService.class);
-
         EditText etNombre = view.findViewById(R.id.etNombre);
         EditText etPassword = view.findViewById(R.id.etPassword);
         Button btnIngresar = view.findViewById(R.id.btnIngresar);
         TextView textRegistro = view.findViewById(R.id.tvRegistrate);
+
+        EditText etOtpCode = view.findViewById(R.id.etOtpCode);
+        Button btnSolicitarOtp = view.findViewById(R.id.btnSolicitarOtp);
+        Button btnVerificarOtp = view.findViewById(R.id.btnVerificarOtp);
 
         btnIngresar.setOnClickListener(v -> {
             String email = etNombre.getText().toString().trim();
@@ -72,7 +87,7 @@ public class LoginFragment extends Fragment {
                         return;
                     }
 
-                    RetrofitClient.getSessionManager().saveSession(
+                    tokenManager.saveSession(
                             authResponse.getToken(),
                             authResponse.getEmail(),
                             authResponse.getName()
@@ -98,6 +113,88 @@ public class LoginFragment extends Fragment {
         textRegistro.setOnClickListener(v -> {
             Navigation.findNavController(view)
                     .navigate(R.id.action_login_to_register);
+        });
+
+        btnSolicitarOtp.setOnClickListener(v -> {
+            String email = etNombre.getText().toString().trim();
+            if (email.isEmpty()) {
+                Toast.makeText(requireContext(), "Completá tu email primero.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            btnSolicitarOtp.setEnabled(false);
+            authApiService.requestOtp(new OtpRequest(email)).enqueue(new Callback<Map<String, String>>() {
+                @Override
+                public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
+                    btnSolicitarOtp.setEnabled(true);
+                    if (!isAdded()) return;
+
+                    if (response.isSuccessful()) {
+                        Toast.makeText(requireContext(), "Código enviado a tu email", Toast.LENGTH_SHORT).show();
+                        // Hide password flow, show OTP flow
+                        etPassword.setVisibility(View.GONE);
+                        btnIngresar.setVisibility(View.GONE);
+                        btnSolicitarOtp.setVisibility(View.GONE);
+                        
+                        etOtpCode.setVisibility(View.VISIBLE);
+                        btnVerificarOtp.setVisibility(View.VISIBLE);
+                    } else {
+                        Toast.makeText(requireContext(), "Error al pedir OTP", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
+                    btnSolicitarOtp.setEnabled(true);
+                    if (isAdded()) {
+                        Toast.makeText(requireContext(), "Error de red (" + t.getMessage() + ")", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        });
+
+        btnVerificarOtp.setOnClickListener(v -> {
+            String email = etNombre.getText().toString().trim();
+            String otp = etOtpCode.getText().toString().trim();
+
+            if (otp.isEmpty()) {
+                Toast.makeText(requireContext(), "Ingresá el código OTP.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            btnVerificarOtp.setEnabled(false);
+            authApiService.verifyOtp(new OtpVerificationRequest(email, otp)).enqueue(new Callback<AuthResponse>() {
+                @Override
+                public void onResponse(@NonNull Call<AuthResponse> call, @NonNull Response<AuthResponse> response) {
+                    btnVerificarOtp.setEnabled(true);
+                    if (!isAdded()) return;
+
+                    AuthResponse authResponse = response.body();
+                    if (!response.isSuccessful() || authResponse == null || authResponse.getToken() == null) {
+                        Toast.makeText(requireContext(), "Código incorrecto o expirado.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    tokenManager.saveSession(
+                            authResponse.getToken(),
+                            authResponse.getEmail(),
+                            authResponse.getName()
+                    );
+
+                    Bundle args = new Bundle();
+                    String displayName = authResponse.getName();
+                    args.putString("username", displayName == null || displayName.isEmpty() ? email : displayName);
+                    Navigation.findNavController(view).navigate(R.id.action_auth_to_home, args);
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<AuthResponse> call, @NonNull Throwable t) {
+                    btnVerificarOtp.setEnabled(true);
+                    if (isAdded()) {
+                        Toast.makeText(requireContext(), "Error de red", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
         });
     }
 }

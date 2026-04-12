@@ -1,9 +1,13 @@
-package com.rutea.app.activitiesandviews.ui.data.network;
+package com.rutea.app.data.local;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import dagger.hilt.android.qualifiers.ApplicationContext;
 
-public class SessionManager {
+@Singleton
+public class TokenManager {
     private static final String PREF_NAME = "rutea_session";
     private static final String KEY_TOKEN = "jwt_token";
     private static final String KEY_EMAIL = "user_email";
@@ -11,7 +15,8 @@ public class SessionManager {
 
     private final SharedPreferences preferences;
 
-    public SessionManager(Context context) {
+    @Inject
+    public TokenManager(@ApplicationContext Context context) {
         preferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
     }
 

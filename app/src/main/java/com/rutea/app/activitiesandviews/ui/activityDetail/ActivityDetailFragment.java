@@ -15,14 +15,20 @@ import androidx.navigation.Navigation;
 
 import com.rutea.app.R;
 import com.rutea.app.activitiesandviews.ui.data.network.ActivityApiService;
-import com.rutea.app.activitiesandviews.ui.data.network.RetrofitClient;
 import com.rutea.app.activitiesandviews.ui.data.network.dto.activity.ActivityDto;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import dagger.hilt.android.AndroidEntryPoint;
+import javax.inject.Inject;
+
+@AndroidEntryPoint
 public class ActivityDetailFragment extends Fragment {
+
+    @Inject
+    ActivityApiService activityApiService;
 
     @Nullable
     @Override
@@ -62,8 +68,6 @@ public class ActivityDetailFragment extends Fragment {
         tvEmpresa.setText("🏷️ Categoría: -");
 
         if (selectedActivityId > 0) {
-            RetrofitClient.init(requireContext());
-            ActivityApiService activityApiService = RetrofitClient.createService(ActivityApiService.class);
             activityApiService.getActivityById(selectedActivityId).enqueue(new Callback<ActivityDto>() {
                 @Override
                 public void onResponse(@NonNull Call<ActivityDto> call, @NonNull Response<ActivityDto> response) {
