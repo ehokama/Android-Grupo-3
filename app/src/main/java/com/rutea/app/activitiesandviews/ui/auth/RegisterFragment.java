@@ -9,22 +9,31 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.rutea.app.R;
-import com.rutea.app.activitiesandviews.ui.data.network.AuthApiService;
-import com.rutea.app.activitiesandviews.ui.data.network.RetrofitClient;
-import com.rutea.app.activitiesandviews.ui.data.network.dto.auth.AuthResponse;
-import com.rutea.app.activitiesandviews.ui.data.network.dto.auth.RegisterRequest;
+import com.rutea.app.activitiesandviews.data.network.AuthApiService;
+import com.rutea.app.activitiesandviews.data.models.dto.auth.AuthResponse;
+import com.rutea.app.activitiesandviews.data.models.dto.auth.RegisterRequest;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import dagger.hilt.android.AndroidEntryPoint;
+import javax.inject.Inject;
+
+@AndroidEntryPoint
 public class RegisterFragment extends Fragment {
+
+    @Inject
+    AuthApiService authApiService;
 
     @Nullable
     @Override
@@ -37,20 +46,25 @@ public class RegisterFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
-        RetrofitClient.init(requireContext());
-        AuthApiService authApiService = RetrofitClient.createService(AuthApiService.class);
-
         EditText etNombre = view.findViewById(R.id.etNombre);
         EditText etEmail = view.findViewById(R.id.etEmail);
+        EditText etPhone = view.findViewById(R.id.etPhone);
         EditText etPassword = view.findViewById(R.id.etPassword);
         EditText etConfirmPassword = view.findViewById(R.id.etConfirmPassword);
         Button btnRegistrar = view.findViewById(R.id.btnRegistrar);
         TextView tvYaTengoLogin = view.findViewById(R.id.tvYaTengoLogin);
 
+        com.google.android.material.chip.Chip chipFreeTour = view.findViewById(R.id.chipFreeTour);
+        com.google.android.material.chip.Chip chipVisitaGuiada = view.findViewById(R.id.chipVisitaGuiada);
+        com.google.android.material.chip.Chip chipExcursion = view.findViewById(R.id.chipExcursion);
+        com.google.android.material.chip.Chip chipGastronomica = view.findViewById(R.id.chipGastronomica);
+        com.google.android.material.chip.Chip chipAventura = view.findViewById(R.id.chipAventura);
+        com.google.android.material.chip.Chip chipOtro = view.findViewById(R.id.chipOtro);
+
         btnRegistrar.setOnClickListener(v -> {
             String name = etNombre.getText() == null ? "" : etNombre.getText().toString().trim();
             String email = etEmail.getText() == null ? "" : etEmail.getText().toString().trim();
+            String phone = etPhone.getText() == null ? "" : etPhone.getText().toString().trim();
             String password = etPassword.getText() == null ? "" : etPassword.getText().toString().trim();
             String confirmPassword = etConfirmPassword.getText() == null ? "" : etConfirmPassword.getText().toString().trim();
 
@@ -65,7 +79,16 @@ public class RegisterFragment extends Fragment {
             }
 
             btnRegistrar.setEnabled(false);
-            RegisterRequest request = new RegisterRequest(email, password, name, null, null);
+            
+            Set<String> preferences = new HashSet<>();
+            if (chipFreeTour.isChecked()) preferences.add("FREE_TOUR");
+            if (chipVisitaGuiada.isChecked()) preferences.add("VISITA_GUIADA");
+            if (chipExcursion.isChecked()) preferences.add("EXCURSION");
+            if (chipGastronomica.isChecked()) preferences.add("EXPERIENCIA_GASTRONOMICA");
+            if (chipAventura.isChecked()) preferences.add("AVENTURA");
+            if (chipOtro.isChecked()) preferences.add("OTRO");
+
+            RegisterRequest request = new RegisterRequest(email, password, name, phone, preferences);
             authApiService.register(request).enqueue(new Callback<AuthResponse>() {
                 @Override
                 public void onResponse(@NonNull Call<AuthResponse> call, @NonNull Response<AuthResponse> response) {

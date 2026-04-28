@@ -13,9 +13,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.rutea.app.R;
-import com.rutea.app.activitiesandviews.ui.data.network.ReserveApiService;
-import com.rutea.app.activitiesandviews.ui.data.network.RetrofitClient;
-import com.rutea.app.activitiesandviews.ui.data.network.dto.reserve.ReserveDto;
+import com.rutea.app.activitiesandviews.data.network.ReserveApiService;
+import com.rutea.app.activitiesandviews.data.models.dto.reserve.ReserveDto;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -27,11 +26,17 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import dagger.hilt.android.AndroidEntryPoint;
+import javax.inject.Inject;
+
+@AndroidEntryPoint
 public class MyActivitiesFragment extends Fragment {
     private RecyclerView rv;
     private ProgressBar progressBar;
     private TextView tvState;
-    private ReserveApiService reserveApiService;
+
+    @Inject
+    ReserveApiService reserveApiService;
 
     public MyActivitiesFragment() {
         super(R.layout.fragment_my_activities);
@@ -47,8 +52,6 @@ public class MyActivitiesFragment extends Fragment {
 
         rv.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        RetrofitClient.init(requireContext());
-        reserveApiService = RetrofitClient.createService(ReserveApiService.class);
         loadHistory();
     }
 

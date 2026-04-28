@@ -72,6 +72,24 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilPhone"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="Teléfono"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tilEmail">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etPhone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="phone" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilPassword"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="0dp"
@@ -81,7 +99,7 @@
             app:passwordToggleEnabled="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tilEmail">
+            app:layout_constraintTop_toBottomOf="@id/tilPhone">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPassword"
@@ -109,6 +127,34 @@
                 android:inputType="textPassword" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <TextView
+            android:id="@+id/tvPreferencias"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Preferencias deViaje"
+            android:textColor="#212121"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tilConfirmPassword" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/cgPreferencias"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvPreferencias">
+
+            <com.google.android.material.chip.Chip android:id="@+id/chipFreeTour" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Free Tour" style="@style/Widget.MaterialComponents.Chip.Filter" />
+            <com.google.android.material.chip.Chip android:id="@+id/chipVisitaGuiada" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Visita Guiada" style="@style/Widget.MaterialComponents.Chip.Filter" />
+            <com.google.android.material.chip.Chip android:id="@+id/chipExcursion" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Excursion" style="@style/Widget.MaterialComponents.Chip.Filter" />
+            <com.google.android.material.chip.Chip android:id="@+id/chipGastronomica" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Experiencia Gastronomica" style="@style/Widget.MaterialComponents.Chip.Filter" />
+            <com.google.android.material.chip.Chip android:id="@+id/chipAventura" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Aventura" style="@style/Widget.MaterialComponents.Chip.Filter" />
+            <com.google.android.material.chip.Chip android:id="@+id/chipOtro" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Otro" style="@style/Widget.MaterialComponents.Chip.Filter" />
+        </com.google.android.material.chip.ChipGroup>
+
         <Button
             android:id="@+id/btnRegistrar"
             android:layout_width="0dp"
@@ -119,7 +165,7 @@
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tilConfirmPassword" />
+            app:layout_constraintTop_toBottomOf="@id/cgPreferencias" />
 
         <TextView
             android:id="@+id/tvYaTengoLogin"

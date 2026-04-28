@@ -16,12 +16,11 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.rutea.app.R;
-import com.rutea.app.activitiesandviews.ui.data.network.DisponibilityApiService;
-import com.rutea.app.activitiesandviews.ui.data.network.ReserveApiService;
-import com.rutea.app.activitiesandviews.ui.data.network.ReserveRequestFactory;
-import com.rutea.app.activitiesandviews.ui.data.network.RetrofitClient;
-import com.rutea.app.activitiesandviews.ui.data.network.dto.disponibility.DisponibilityDto;
-import com.rutea.app.activitiesandviews.ui.data.network.dto.reserve.ReserveDto;
+import com.rutea.app.activitiesandviews.data.network.DisponibilityApiService;
+import com.rutea.app.activitiesandviews.data.network.ReserveApiService;
+import com.rutea.app.activitiesandviews.data.network.ReserveRequestFactory;
+import com.rutea.app.activitiesandviews.data.models.dto.disponibility.DisponibilityDto;
+import com.rutea.app.activitiesandviews.data.models.dto.reserve.ReserveDto;
 
 import org.json.JSONObject;
 
@@ -40,13 +39,22 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import dagger.hilt.android.AndroidEntryPoint;
+import javax.inject.Inject;
+
+@AndroidEntryPoint
 public class ReservationFragment extends Fragment {
 
     private int personas = 1;
     private TextView tvPersonas;
     private final List<DisponibilityDto> selectedDisponibilities = new ArrayList<>();
-    private ReserveApiService reserveApiService;
-    private DisponibilityApiService disponibilityApiService;
+
+    @Inject
+    ReserveApiService reserveApiService;
+
+    @Inject
+    DisponibilityApiService disponibilityApiService;
+
     private Spinner spinnerHorario;
     private Spinner spinnerDia;
     private Spinner spinnerMes;
@@ -72,10 +80,6 @@ public class ReservationFragment extends Fragment {
             activityId = getArguments().getLong("activityId", -1L);
         }
         ((TextView) view.findViewById(R.id.tvNombreActividad)).setText(nombreActividad);
-
-        RetrofitClient.init(requireContext());
-        reserveApiService = RetrofitClient.createService(ReserveApiService.class);
-        disponibilityApiService = RetrofitClient.createService(DisponibilityApiService.class);
 
         // --- dia ---
         spinnerDia = view.findViewById(R.id.spinnerDia);
