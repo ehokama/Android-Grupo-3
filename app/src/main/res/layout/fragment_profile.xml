@@ -39,13 +39,31 @@
             android:layout_gravity="center"
             android:textColor="@android:color/darker_gray"/>
 
+        <!-- Teléfono -->
+        <TextView
+            android:id="@+id/tvPhone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+00 000 00000"
+            android:layout_gravity="center"
+            android:textColor="@android:color/darker_gray"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="24dp"/>
+
         <!-- Botones -->
+        <Button
+            android:id="@+id/btnEditProfile"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Editar Perfil"
+            android:layout_marginTop="32dp"/>
+
         <Button
             android:id="@+id/btnMyActivities"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Mis viajes"
-            android:layout_marginTop="24dp"/>
+            android:text="Historial de Viajes"
+            android:layout_marginTop="16dp"/>
 
         <Button
             android:id="@+id/btnCerrarSesion"
