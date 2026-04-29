@@ -62,6 +62,10 @@ dependencies {
     // EncryptedSharedPreferences
     implementation(libs.security.crypto)
 
+    // Biometría y almacenamiento cifrado
+    implementation(libs.biometric)
+    implementation(libs.security.crypto)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

@@ -1,39 +1,46 @@
 package com.rutea.app.activitiesandviews.ui.auth;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.biometric.BiometricManager;
+import androidx.biometric.BiometricManager.Authenticators;
+import androidx.biometric.BiometricPrompt;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.rutea.app.R;
-import com.rutea.app.activitiesandviews.data.network.AuthApiService;
+import com.rutea.app.activitiesandviews.data.local.TokenManager;
 import com.rutea.app.activitiesandviews.data.models.dto.auth.AuthRequest;
 import com.rutea.app.activitiesandviews.data.models.dto.auth.AuthResponse;
 import com.rutea.app.activitiesandviews.data.models.dto.auth.OtpRequest;
 import com.rutea.app.activitiesandviews.data.models.dto.auth.OtpVerificationRequest;
-
-import java.util.Map;
+import com.rutea.app.activitiesandviews.data.network.AuthApiService;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-import com.rutea.app.activitiesandviews.data.local.TokenManager;
 import dagger.hilt.android.AndroidEntryPoint;
+
 import javax.inject.Inject;
 
 @AndroidEntryPoint
 public class LoginFragment extends Fragment {
+
+    private static final int ALLOWED_AUTHENTICATORS =
+            Authenticators.BIOMETRIC_STRONG | Authenticators.DEVICE_CREDENTIAL;
 
     private enum LoginMode {
         PASSWORD, OTP_REQUEST, OTP_VERIFY
@@ -47,6 +54,10 @@ public class LoginFragment extends Fragment {
 
     @Inject
     AuthApiService authApiService;
+
+    private LinearLayout layoutCredentials;
+    private LinearLayout layoutBiometric;
+    private TextView tvBiometricStatus;
 
     private EditText etNombre, etPassword, etOtpCode;
     private com.google.android.material.textfield.TextInputLayout tilEmail, tilPassword, tilOtpCode;
@@ -66,7 +77,10 @@ public class LoginFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Initialize Views
+        layoutCredentials = view.findViewById(R.id.layoutCredentials);
+        layoutBiometric = view.findViewById(R.id.layoutBiometric);
+        tvBiometricStatus = view.findViewById(R.id.tvBiometricStatus);
+
         etNombre = view.findViewById(R.id.etNombre);
         etPassword = view.findViewById(R.id.etPassword);
         etOtpCode = view.findViewById(R.id.etOtpCode);
@@ -80,8 +94,100 @@ public class LoginFragment extends Fragment {
         progressBar = view.findViewById(R.id.progressBar);
 
         setupClickListeners();
+
+        // Si el usuario activó biometría en un login previo, saltar directo al prompt
+        if (tokenManager.isBiometricEnabled()) {
+            showBiometricPrompt();
+        } else {
+            showCredentialForm();
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Alternancia entre pantalla biométrica y formulario de credenciales
+    // -------------------------------------------------------------------------
+
+    private void showCredentialForm() {
+        layoutCredentials.setVisibility(View.VISIBLE);
+        layoutBiometric.setVisibility(View.GONE);
         updateUI(LoginMode.PASSWORD);
     }
+
+    private void showBiometricPrompt() {
+        layoutCredentials.setVisibility(View.GONE);
+        layoutBiometric.setVisibility(View.VISIBLE);
+        tvBiometricStatus.setText("Verificando identidad...");
+
+        // Siempre verificar disponibilidad del hardware antes de lanzar el prompt
+        BiometricManager manager = BiometricManager.from(requireContext());
+        if (manager.canAuthenticate(ALLOWED_AUTHENTICATORS) != BiometricManager.BIOMETRIC_SUCCESS) {
+            showCredentialForm();
+            return;
+        }
+
+        BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
+                .setTitle("Bienvenido de nuevo")
+                .setSubtitle("Confirmá tu identidad para ingresar")
+                .setAllowedAuthenticators(ALLOWED_AUTHENTICATORS)
+                .build();
+
+        BiometricPrompt biometricPrompt = new BiometricPrompt(this,
+                new BiometricPrompt.AuthenticationCallback() {
+
+                    @Override
+                    public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
+                        super.onAuthenticationSucceeded(result);
+                        // Recuperar el token cifrado y restaurar la sesión
+                        String token = tokenManager.getEncryptedToken();
+                        String email = tokenManager.getEmail();
+                        String name = tokenManager.getName();
+                        if (token != null) {
+                            tokenManager.saveSession(token, email, name);
+                            goToHome(name != null && !name.isEmpty() ? name : email);
+                        } else {
+                            showCredentialForm();
+                        }
+                    }
+
+                    @Override
+                    public void onAuthenticationFailed() {
+                        super.onAuthenticationFailed();
+                        // El sistema ya muestra feedback visual; no se requiere acción aquí
+                    }
+
+                    @Override
+                    public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
+                        super.onAuthenticationError(errorCode, errString);
+                        // Error terminal o cancelación por el usuario: caer al formulario
+                        showCredentialForm();
+                    }
+                });
+
+        biometricPrompt.authenticate(promptInfo);
+    }
+
+    // -------------------------------------------------------------------------
+    // Oferta de activación biométrica tras un login exitoso
+    // -------------------------------------------------------------------------
+
+    private void ofrecerBiometria(AuthResponse authResponse) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Activar acceso biométrico")
+                .setMessage("¿Querés usar tu huella digital la próxima vez que inicies sesión?")
+                .setPositiveButton("Sí, activar", (dialog, which) -> {
+                    tokenManager.setBiometricEnabled(true);
+                    tokenManager.saveEncryptedToken(authResponse.getToken());
+                    goToHome(authResponse.getName() != null ? authResponse.getName() : authResponse.getEmail());
+                })
+                .setNegativeButton("No, gracias", (dialog, which) ->
+                        goToHome(authResponse.getName() != null ? authResponse.getName() : authResponse.getEmail()))
+                .setCancelable(false)
+                .show();
+    }
+
+    // -------------------------------------------------------------------------
+    // Manejo de los tres modos de login: contraseña, solicitud OTP y verificación OTP
+    // -------------------------------------------------------------------------
 
     private void setupClickListeners() {
         btnMainAction.setOnClickListener(v -> {
@@ -106,9 +212,13 @@ public class LoginFragment extends Fragment {
             }
         });
 
-        textRegistro.setOnClickListener(v -> 
-            Navigation.findNavController(v).navigate(R.id.action_login_to_register)
+        textRegistro.setOnClickListener(v ->
+                Navigation.findNavController(v).navigate(R.id.action_login_to_register)
         );
+
+        // Permite volver al formulario desde la pantalla biométrica
+        View btnUsarCredenciales = requireView().findViewById(R.id.btnUsarCredenciales);
+        btnUsarCredenciales.setOnClickListener(v -> showCredentialForm());
     }
 
     private void updateUI(LoginMode mode) {
@@ -186,9 +296,9 @@ public class LoginFragment extends Fragment {
         }
 
         setLoading(true);
-        authApiService.requestOtp(new OtpRequest(email)).enqueue(new Callback<Map<String, String>>() {
+        authApiService.requestOtp(new OtpRequest(email)).enqueue(new Callback<Void>() {
             @Override
-            public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
                 setLoading(false);
                 if (response.isSuccessful()) {
                     updateUI(LoginMode.OTP_VERIFY);
@@ -199,7 +309,7 @@ public class LoginFragment extends Fragment {
             }
 
             @Override
-            public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
                 setLoading(false);
                 String errorMsg = "Error de red";
                 if (t instanceof java.net.SocketTimeoutException) {
@@ -242,8 +352,16 @@ public class LoginFragment extends Fragment {
 
     private void saveAndNavigate(AuthResponse authResponse) {
         tokenManager.saveSession(authResponse.getToken(), authResponse.getEmail(), authResponse.getName());
+        ofrecerBiometria(authResponse);
+    }
+
+    // -------------------------------------------------------------------------
+    // Navegación y utilidades
+    // -------------------------------------------------------------------------
+
+    private void goToHome(String username) {
         Bundle args = new Bundle();
-        args.putString("username", authResponse.getName() != null ? authResponse.getName() : authResponse.getEmail());
+        args.putString("username", username);
         Navigation.findNavController(requireView()).navigate(R.id.action_auth_to_home, args);
     }
 
@@ -258,7 +376,7 @@ public class LoginFragment extends Fragment {
     private void startTimer() {
         if (countDownTimer != null) countDownTimer.cancel();
         btnMainAction.setEnabled(true);
-        
+
         countDownTimer = new android.os.CountDownTimer(60000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
