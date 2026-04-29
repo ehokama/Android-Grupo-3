@@ -108,7 +108,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="🌍 Destinos más famosos"
+                android:text="🌍 Destinos más visitados"
                 android:textColor="#212121"
                 android:textSize="17sp"
                 android:textStyle="bold" />
@@ -120,7 +120,7 @@
                 android:scrollbars="none">
 
                 <LinearLayout
-                    android:id="@+id/llDestinos"
+                    android:id="@+id/llMostVisited"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal" />
@@ -155,7 +155,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:text="🔥 Más reservadas"
+                android:text="🔥 Mejores Puntuadas"
                 android:textColor="#212121"
                 android:textSize="17sp"
                 android:textStyle="bold" />
@@ -167,7 +167,7 @@
                 android:scrollbars="none">
 
                 <LinearLayout
-                    android:id="@+id/llMasReservadas"
+                    android:id="@+id/llTopRated"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"/>

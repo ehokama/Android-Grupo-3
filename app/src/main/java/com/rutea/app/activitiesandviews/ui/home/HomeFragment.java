@@ -14,6 +14,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
+import com.bumptech.glide.Glide;
 import com.rutea.app.R;
 import com.rutea.app.activitiesandviews.data.network.ActivityApiService;
 import com.rutea.app.activitiesandviews.data.models.dto.activity.ActivityDto;
@@ -51,69 +52,77 @@ public class HomeFragment extends Fragment {
         TextView tvGreeting = view.findViewById(R.id.tvGreeting);
         if (!username.isEmpty()) tvGreeting.setText("Hola, " + username + " 👋");
 
-        loadPagedSection(view, R.id.llDestinos, null);
-        loadFeaturedSection(view, R.id.llRecomendadas);
-        loadPagedSection(view, R.id.llMasReservadas, "rating,desc");
+        loadMostVisited(view);
+        loadRecommended(view);
+        loadTopRated(view);
     }
 
-    private void loadPagedSection(View root, int containerId, @Nullable String sort) {
-        activityApiService.getActivities(
-                null,
-                null,
-                null,
-                null,
-                null,
-                0,
-                10,
-                sort
-        ).enqueue(new Callback<PageResponse<ActivityDto>>() {
+    private void loadMostVisited(View root) {
+        activityApiService.getMostVisited().enqueue(new Callback<List<ActivityDto>>() {
             @Override
-            public void onResponse(@NonNull Call<PageResponse<ActivityDto>> call, @NonNull Response<PageResponse<ActivityDto>> response) {
-                if (!isAdded()) {
-                    return;
-                }
+            public void onResponse(@NonNull Call<List<ActivityDto>> call,
+                                   @NonNull Response<List<ActivityDto>> response) {
+
+                if (!isAdded()) return;
+
                 if (response.isSuccessful() && response.body() != null) {
-                    renderCards(root, containerId, response.body().getContent());
+                    renderCards(root, R.id.llMostVisited, response.body());
                 } else {
-                    Toast.makeText(requireContext(), "No se pudo cargar actividades.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Error cargando destinos", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
-            public void onFailure(@NonNull Call<PageResponse<ActivityDto>> call, @NonNull Throwable throwable) {
-                if (!isAdded()) {
-                    return;
-                }
-                Toast.makeText(requireContext(), "Error de red al cargar actividades.", Toast.LENGTH_SHORT).show();
+            public void onFailure(@NonNull Call<List<ActivityDto>> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
+                Toast.makeText(requireContext(), "Error de red", Toast.LENGTH_SHORT).show();
             }
         });
     }
-
-    private void loadFeaturedSection(View root, int containerId) {
-        activityApiService.getFeaturedActivities().enqueue(new Callback<List<ActivityDto>>() {
+    private void loadRecommended(View root) {
+        activityApiService.getRecommendations().enqueue(new Callback<List<ActivityDto>>() {
             @Override
-            public void onResponse(@NonNull Call<List<ActivityDto>> call, @NonNull Response<List<ActivityDto>> response) {
-                if (!isAdded()) {
-                    return;
+            public void onResponse(@NonNull Call<List<ActivityDto>> call,
+                                   @NonNull Response<List<ActivityDto>> response) {
+
+                if (!isAdded()) return;
+
+                if (response.isSuccessful() && response.body() != null) {
+                    renderCards(root, R.id.llRecomendadas, response.body());
+                } else {
+                    Toast.makeText(requireContext(), "Error cargando recomendaciones", Toast.LENGTH_SHORT).show();
                 }
-                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
-                    renderCards(root, containerId, response.body());
-                    return;
-                }
-                // fallback a listado general si featured viene vacío.
-                loadPagedSection(root, containerId, null);
             }
 
             @Override
-            public void onFailure(@NonNull Call<List<ActivityDto>> call, @NonNull Throwable throwable) {
-                if (!isAdded()) {
-                    return;
-                }
-                loadPagedSection(root, containerId, null);
+            public void onFailure(@NonNull Call<List<ActivityDto>> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
+                Toast.makeText(requireContext(), "Error de red", Toast.LENGTH_SHORT).show();
             }
         });
     }
+    private void loadTopRated(View root) {
+        activityApiService.getTopRated().enqueue(new Callback<List<ActivityDto>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<ActivityDto>> call,
+                                   @NonNull Response<List<ActivityDto>> response) {
 
+                if (!isAdded()) return;
+
+                if (response.isSuccessful() && response.body() != null) {
+                    renderCards(root, R.id.llTopRated, response.body());
+                } else {
+                    Toast.makeText(requireContext(), "Error cargando mejores puntuadas", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<List<ActivityDto>> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
+                Toast.makeText(requireContext(), "Error de red", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
     private void renderCards(View root, int containerId, List<ActivityDto> activities) {
         LinearLayout container = root.findViewById(containerId);
         LayoutInflater inflater = LayoutInflater.from(getContext());
@@ -129,7 +138,22 @@ public class HomeFragment extends Fragment {
 
             String title = activity.getTitle() == null || activity.getTitle().isEmpty() ? "Actividad" : activity.getTitle();
             ((TextView) card.findViewById(R.id.tvCardLabel)).setText(title);
-            ((ImageView) card.findViewById(R.id.ivCard)).setImageResource(R.drawable.bg_hero_landscape);
+            ImageView imageView = card.findViewById(R.id.ivCard);
+
+            if (activity.getImages() != null && !activity.getImages().isEmpty()) {
+                Long imageId = activity.getImages().get(0).getIdImage();
+
+                String imageUrl = "http://10.0.2.2:8080/api/images/" + imageId + "/raw";
+
+                Glide.with(requireContext())
+                        .load(imageUrl)
+                        .placeholder(R.drawable.bg_hero_landscape)
+                        .error(R.drawable.bg_hero_landscape)
+                        .into(imageView);
+
+            } else {
+                imageView.setImageResource(R.drawable.bg_hero_landscape);
+            }
 
             card.setOnClickListener(v -> {
                 Bundle args = new Bundle();
