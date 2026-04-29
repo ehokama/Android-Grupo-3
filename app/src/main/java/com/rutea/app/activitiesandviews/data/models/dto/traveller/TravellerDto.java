@@ -20,9 +20,10 @@ public class TravellerDto {
     @SerializedName("preferences")
     private List<String> preferences;
 
-    public TravellerDto(String name, String phone) {
+    public TravellerDto(String name, String phone, List<String> preferences) {
         this.name = name;
         this.phone = phone;
+        this.preferences = preferences;
     }
 
     public Long getId_traveller() {
