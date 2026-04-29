@@ -56,4 +56,11 @@ public class ReserveDto {
     public String getActivityTitle() {
         return activityTitle;
     }
+
+    public void setIdReserve(Long idReserve) { this.idReserve = idReserve; }
+    public void setCreationDate(String creationDate) { this.creationDate = creationDate; }
+    public void setNumberOfPeople(Integer numberOfPeople) { this.numberOfPeople = numberOfPeople; }
+    public void setTotalPrice(Double totalPrice) { this.totalPrice = totalPrice; }
+    public void setState(String state) { this.state = state; }
+    public void setActivityTitle(String activityTitle) { this.activityTitle = activityTitle; }
 }

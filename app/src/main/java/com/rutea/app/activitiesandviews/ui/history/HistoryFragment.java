@@ -13,11 +13,15 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.rutea.app.R;
+import com.rutea.app.activitiesandviews.data.local.TokenManager;
+import com.rutea.app.activitiesandviews.data.local.db.CachedReserve;
+import com.rutea.app.activitiesandviews.data.local.db.CachedReserveDao;
 import com.rutea.app.activitiesandviews.data.models.dto.reserve.ReserveDto;
 import com.rutea.app.activitiesandviews.data.network.ReserveApiService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 import dagger.hilt.android.AndroidEntryPoint;
@@ -35,6 +39,12 @@ public class HistoryFragment extends Fragment {
     @Inject
     ReserveApiService reserveApiService;
 
+    @Inject
+    TokenManager tokenManager;
+
+    @Inject
+    CachedReserveDao cachedReserveDao;
+
     public HistoryFragment() {
         super(R.layout.fragment_history);
     }
@@ -49,8 +59,46 @@ public class HistoryFragment extends Fragment {
 
         rvHistory.setLayoutManager(new LinearLayoutManager(getContext()));
 
+        // Cache-first: cargar datos locales, luego intentar la red
+        loadCachedReserves();
         loadHistory();
     }
+
+    // ─── Cache-first: leer Room ───
+
+    private void loadCachedReserves() {
+        String email = tokenManager.getEmail();
+        if (email == null || email.isEmpty()) return;
+
+        Executors.newSingleThreadExecutor().execute(() -> {
+            List<CachedReserve> cached = cachedReserveDao.getByEmail(email);
+            if (cached != null && !cached.isEmpty() && isAdded()) {
+                List<ReserveDto> dtos = mapCachedToDtos(cached);
+                requireActivity().runOnUiThread(() -> {
+                    ReserveAdapter adapter = new ReserveAdapter(dtos, reserveId -> cancelReserve(reserveId));
+                    rvHistory.setAdapter(adapter);
+                    setState(false, null);
+                });
+            }
+        });
+    }
+
+    private List<ReserveDto> mapCachedToDtos(List<CachedReserve> cached) {
+        List<ReserveDto> list = new ArrayList<>();
+        for (CachedReserve c : cached) {
+            ReserveDto dto = new ReserveDto();
+            dto.setIdReserve(c.idReserve);
+            dto.setActivityTitle(c.activityTitle);
+            dto.setCreationDate(c.creationDate);
+            dto.setNumberOfPeople(c.numberOfPeople);
+            dto.setTotalPrice(c.totalPrice);
+            dto.setState(c.state);
+            list.add(dto);
+        }
+        return list;
+    }
+
+    // ─── Fetch de la red y actualizar caché ───
 
     private void loadHistory() {
         setState(true, null);
@@ -60,7 +108,7 @@ public class HistoryFragment extends Fragment {
                 if (!isAdded()) return;
 
                 if (!response.isSuccessful() || response.body() == null) {
-                    setState(false, "No se pudo cargar el historial.");
+                    setState(false, rvHistory.getAdapter() == null ? "No se pudo cargar el historial." : null);
                     return;
                 }
 
@@ -74,15 +122,47 @@ public class HistoryFragment extends Fragment {
                 ReserveAdapter adapter = new ReserveAdapter(reserves, reserveId -> cancelReserve(reserveId));
                 rvHistory.setAdapter(adapter);
                 setState(false, null);
+
+                // Guardar en Room
+                saveToCacheAsync(reserves);
             }
 
             @Override
             public void onFailure(@NonNull Call<List<ReserveDto>> call, @NonNull Throwable t) {
                 if (!isAdded()) return;
-                setState(false, "Error de red al cargar el historial.");
+                // Si ya hay datos cacheados, no mostrar error
+                if (rvHistory.getAdapter() == null || rvHistory.getAdapter().getItemCount() == 0) {
+                    setState(false, "Sin conexión. No hay historial en caché.");
+                } else {
+                    setState(false, null);
+                }
             }
         });
     }
+
+    private void saveToCacheAsync(List<ReserveDto> reserves) {
+        String email = tokenManager.getEmail();
+        if (email == null || email.isEmpty()) return;
+
+        Executors.newSingleThreadExecutor().execute(() -> {
+            cachedReserveDao.deleteByEmail(email);
+            List<CachedReserve> cached = new ArrayList<>();
+            for (ReserveDto r : reserves) {
+                cached.add(new CachedReserve(
+                        r.getIdReserve(),
+                        email,
+                        r.getActivityTitle(),
+                        r.getCreationDate(),
+                        r.getNumberOfPeople(),
+                        r.getTotalPrice(),
+                        r.getState()
+                ));
+            }
+            cachedReserveDao.insertAll(cached);
+        });
+    }
+
+    // ─── Cancelar reserva ───
 
     private void cancelReserve(Long reserveId) {
         setState(true, null);
@@ -93,7 +173,7 @@ public class HistoryFragment extends Fragment {
 
                 if (response.isSuccessful()) {
                     Toast.makeText(requireContext(), "Reserva cancelada exitosamente", Toast.LENGTH_SHORT).show();
-                    loadHistory(); // Reload the list to get updated states
+                    loadHistory();
                 } else {
                     Toast.makeText(requireContext(), "No se pudo cancelar la reserva", Toast.LENGTH_SHORT).show();
                     loadHistory();

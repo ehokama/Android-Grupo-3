@@ -41,7 +41,7 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
-    
+
     // Retrofit & Gson
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
@@ -51,9 +51,16 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     annotationProcessor(libs.hilt.android.compiler)
-    
+
     // Glide for images
     implementation(libs.glide)
+
+    // Room for offline cache
+    implementation(libs.room.runtime)
+    annotationProcessor(libs.room.compiler)
+
+    // EncryptedSharedPreferences
+    implementation(libs.security.crypto)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

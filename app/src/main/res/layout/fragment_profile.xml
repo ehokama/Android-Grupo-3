@@ -10,14 +10,31 @@
         android:orientation="vertical"
         android:padding="24dp">
 
-        <!-- Foto -->
-        <ImageView
-            android:id="@+id/ivProfile"
+        <!-- Foto con icono de cámara -->
+        <FrameLayout
             android:layout_width="100dp"
             android:layout_height="100dp"
-            android:layout_gravity="center"
-            android:src="@drawable/ic_launcher_foreground"
-            android:background="@android:color/darker_gray" />
+            android:layout_gravity="center">
+
+            <ImageView
+                android:id="@+id/ivProfile"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:src="@drawable/ic_launcher_foreground"
+                android:background="@android:color/darker_gray"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="Cambiar foto de perfil" />
+
+            <ImageView
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="bottom|end"
+                android:src="@android:drawable/ic_menu_camera"
+                android:background="@android:color/white"
+                android:padding="4dp"
+                android:contentDescription="Cámara" />
+        </FrameLayout>
 
         <!-- Nombre -->
         <TextView
@@ -62,7 +79,7 @@
             android:id="@+id/btnMyActivities"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Historial de Viajes"
+            android:text="Historial de viajes"
             android:layout_marginTop="16dp"/>
 
         <Button
