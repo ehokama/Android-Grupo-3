@@ -28,8 +28,6 @@ import com.rutea.app.activitiesandviews.data.models.dto.auth.OtpRequest;
 import com.rutea.app.activitiesandviews.data.models.dto.auth.OtpVerificationRequest;
 import com.rutea.app.activitiesandviews.data.network.AuthApiService;
 
-import java.util.Map;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -298,9 +296,9 @@ public class LoginFragment extends Fragment {
         }
 
         setLoading(true);
-        authApiService.requestOtp(new OtpRequest(email)).enqueue(new Callback<Map<String, String>>() {
+        authApiService.requestOtp(new OtpRequest(email)).enqueue(new Callback<Void>() {
             @Override
-            public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
                 setLoading(false);
                 if (response.isSuccessful()) {
                     updateUI(LoginMode.OTP_VERIFY);
@@ -311,7 +309,7 @@ public class LoginFragment extends Fragment {
             }
 
             @Override
-            public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
                 setLoading(false);
                 String errorMsg = "Error de red";
                 if (t instanceof java.net.SocketTimeoutException) {

@@ -59,7 +59,11 @@ public class TokenManager {
     }
 
     public void clearSession() {
-        preferences.edit().clear().apply();
+        preferences.edit()
+                .remove(KEY_TOKEN)
+                .remove(KEY_EMAIL)
+                .remove(KEY_NAME)
+                .apply();
     }
 
     // --- Flag biométrico ---
