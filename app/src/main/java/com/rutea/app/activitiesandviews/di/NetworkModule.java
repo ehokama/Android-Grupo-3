@@ -2,11 +2,13 @@ package com.rutea.app.activitiesandviews.di;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import com.rutea.app.activitiesandviews.data.network.ActivityApiService;
 import com.rutea.app.activitiesandviews.data.network.AuthApiService;
 import com.rutea.app.activitiesandviews.data.network.DisponibilityApiService;
 import com.rutea.app.activitiesandviews.data.network.ReserveApiService;
 import com.rutea.app.activitiesandviews.data.local.TokenManager;
+import com.rutea.app.activitiesandviews.data.network.TravellerApiService;
 
 import javax.inject.Singleton;
 
@@ -93,5 +95,11 @@ public class NetworkModule {
     @Singleton
     public ReserveApiService provideReserveApiService(Retrofit retrofit) {
         return retrofit.create(ReserveApiService.class);
+    }
+
+    @Provides
+    @Singleton
+    public TravellerApiService provideTravellerApiService(@NonNull Retrofit retrofit) {
+        return retrofit.create(TravellerApiService.class);
     }
 }

@@ -145,15 +145,7 @@
             android:layout_marginTop="8dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvPreferencias">
-
-            <com.google.android.material.chip.Chip android:id="@+id/chipFreeTour" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Free Tour" style="@style/Widget.MaterialComponents.Chip.Filter" />
-            <com.google.android.material.chip.Chip android:id="@+id/chipVisitaGuiada" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Visita Guiada" style="@style/Widget.MaterialComponents.Chip.Filter" />
-            <com.google.android.material.chip.Chip android:id="@+id/chipExcursion" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Excursion" style="@style/Widget.MaterialComponents.Chip.Filter" />
-            <com.google.android.material.chip.Chip android:id="@+id/chipGastronomica" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Experiencia Gastronomica" style="@style/Widget.MaterialComponents.Chip.Filter" />
-            <com.google.android.material.chip.Chip android:id="@+id/chipAventura" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Aventura" style="@style/Widget.MaterialComponents.Chip.Filter" />
-            <com.google.android.material.chip.Chip android:id="@+id/chipOtro" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Otro" style="@style/Widget.MaterialComponents.Chip.Filter" />
-        </com.google.android.material.chip.ChipGroup>
+            app:layout_constraintTop_toBottomOf="@id/tvPreferencias" />
 
         <Button
             android:id="@+id/btnRegistrar"

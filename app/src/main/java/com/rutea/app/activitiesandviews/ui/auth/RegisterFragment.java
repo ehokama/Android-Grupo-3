@@ -10,6 +10,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import androidx.annotation.NonNull;
@@ -17,7 +18,10 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
 import com.rutea.app.R;
+import com.rutea.app.activitiesandviews.data.network.ActivityApiService;
 import com.rutea.app.activitiesandviews.data.network.AuthApiService;
 import com.rutea.app.activitiesandviews.data.models.dto.auth.AuthResponse;
 import com.rutea.app.activitiesandviews.data.models.dto.auth.RegisterRequest;
@@ -34,6 +38,9 @@ public class RegisterFragment extends Fragment {
 
     @Inject
     AuthApiService authApiService;
+
+    @Inject
+    ActivityApiService activityApiService;
 
     @Nullable
     @Override
@@ -54,12 +61,27 @@ public class RegisterFragment extends Fragment {
         Button btnRegistrar = view.findViewById(R.id.btnRegistrar);
         TextView tvYaTengoLogin = view.findViewById(R.id.tvYaTengoLogin);
 
-        com.google.android.material.chip.Chip chipFreeTour = view.findViewById(R.id.chipFreeTour);
-        com.google.android.material.chip.Chip chipVisitaGuiada = view.findViewById(R.id.chipVisitaGuiada);
-        com.google.android.material.chip.Chip chipExcursion = view.findViewById(R.id.chipExcursion);
-        com.google.android.material.chip.Chip chipGastronomica = view.findViewById(R.id.chipGastronomica);
-        com.google.android.material.chip.Chip chipAventura = view.findViewById(R.id.chipAventura);
-        com.google.android.material.chip.Chip chipOtro = view.findViewById(R.id.chipOtro);
+        ChipGroup cgPreferencias = view.findViewById(R.id.cgPreferencias);
+
+        // Fetch categories dynamically
+        activityApiService.getCategories().enqueue(new Callback<List<String>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<String>> call, @NonNull Response<List<String>> response) {
+                if (response.isSuccessful() && response.body() != null && isAdded()) {
+                    for (String category : response.body()) {
+                        Chip chip = new Chip(requireContext());
+                        chip.setText(category);
+                        chip.setCheckable(true);
+                        cgPreferencias.addView(chip);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<List<String>> call, @NonNull Throwable throwable) {
+                // Ignore gracefully if it fails, the user just won't see tags
+            }
+        });
 
         btnRegistrar.setOnClickListener(v -> {
             String name = etNombre.getText() == null ? "" : etNombre.getText().toString().trim();
@@ -79,14 +101,14 @@ public class RegisterFragment extends Fragment {
             }
 
             btnRegistrar.setEnabled(false);
-            
+
             Set<String> preferences = new HashSet<>();
-            if (chipFreeTour.isChecked()) preferences.add("FREE_TOUR");
-            if (chipVisitaGuiada.isChecked()) preferences.add("VISITA_GUIADA");
-            if (chipExcursion.isChecked()) preferences.add("EXCURSION");
-            if (chipGastronomica.isChecked()) preferences.add("EXPERIENCIA_GASTRONOMICA");
-            if (chipAventura.isChecked()) preferences.add("AVENTURA");
-            if (chipOtro.isChecked()) preferences.add("OTRO");
+            for (int i = 0; i < cgPreferencias.getChildCount(); i++) {
+                Chip chip = (Chip) cgPreferencias.getChildAt(i);
+                if (chip.isChecked()) {
+                    preferences.add(chip.getText().toString());
+                }
+            }
 
             RegisterRequest request = new RegisterRequest(email, password, name, phone, preferences);
             authApiService.register(request).enqueue(new Callback<AuthResponse>() {

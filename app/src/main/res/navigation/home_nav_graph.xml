@@ -26,8 +26,25 @@
         android:name="com.rutea.app.activitiesandviews.ui.profile.ProfileFragment"
         android:label="Perfil">
         <action
-            android:id="@+id/action_profile_to_myActivities"
-            app:destination="@id/myActivitiesFragment"/>
+            android:id="@+id/action_profile_to_history"
+            app:destination="@id/historyFragment"/>
+        <action
+            android:id="@+id/action_profile_to_editProfile"
+            app:destination="@id/editProfileFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/editProfileFragment"
+        android:name="com.rutea.app.activitiesandviews.ui.profile.EditProfileFragment"
+        android:label="Editar Perfil"
+        tools:layout="@layout/fragment_edit_profile">
+    </fragment>
+
+    <fragment
+        android:id="@+id/historyFragment"
+        android:name="com.rutea.app.activitiesandviews.ui.history.HistoryFragment"
+        android:label="Historial de Viajes"
+        tools:layout="@layout/fragment_history">
     </fragment>
 
     <fragment
