@@ -1,20 +1,22 @@
 package com.rutea.app.activitiesandviews.di;
 
+import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
 import com.rutea.app.activitiesandviews.data.network.ActivityApiService;
 import com.rutea.app.activitiesandviews.data.network.AuthApiService;
 import com.rutea.app.activitiesandviews.data.network.DisponibilityApiService;
 import com.rutea.app.activitiesandviews.data.network.ReserveApiService;
-import com.rutea.app.activitiesandviews.data.local.TokenManager;
 import com.rutea.app.activitiesandviews.data.network.TravellerApiService;
+import com.rutea.app.activitiesandviews.data.local.TokenManager;
 
 import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
 import dagger.hilt.InstallIn;
+import dagger.hilt.android.qualifiers.ApplicationContext;
 import dagger.hilt.components.SingletonComponent;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -26,12 +28,13 @@ import retrofit2.converter.gson.GsonConverterFactory;
 @InstallIn(SingletonComponent.class)
 public class NetworkModule {
 
+    public static final String ACTION_SESSION_EXPIRED = "com.rutea.app.SESSION_EXPIRED";
     private static final String BASE_URL = "http://172.20.150.47:8080/";
     private static final String TAG = "NetworkModule";
 
     @Provides
     @Singleton
-    public OkHttpClient provideOkHttp(TokenManager tokenManager) {
+    public OkHttpClient provideOkHttp(TokenManager tokenManager, @ApplicationContext Context context) {
         HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
         loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
@@ -39,10 +42,11 @@ public class NetworkModule {
                 .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
                 .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
                 .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                // Interceptor 1: Agrega el token a las peticiones
                 .addInterceptor(chain -> {
                     String token = tokenManager.getToken();
                     Request request = chain.request();
-                    
+
                     // No agregar el token a los endpoints de autenticación (login, registro, otp)
                     String path = request.url().encodedPath();
                     boolean isAuthEndpoint = path.contains("/api/auth/");
@@ -58,6 +62,22 @@ public class NetworkModule {
                         Log.d(TAG, "Sin token — request sin Authorization header");
                     }
                     return chain.proceed(request);
+                })
+                // Interceptor 2: Detecta token expirado (401) y fuerza cierre de sesión
+                .addInterceptor(chain -> {
+                    okhttp3.Response response = chain.proceed(chain.request());
+                    if (response.code() == 401) {
+                        String path = chain.request().url().encodedPath();
+                        boolean isAuthEndpoint = path.contains("/api/auth/");
+                        if (!isAuthEndpoint) {
+                            Log.w(TAG, "Token expirado detectado (401). Cerrando sesión...");
+                            tokenManager.clearSession();
+                            Intent intent = new Intent(ACTION_SESSION_EXPIRED);
+                            intent.setPackage(context.getPackageName());
+                            context.sendBroadcast(intent);
+                        }
+                    }
+                    return response;
                 })
                 .addInterceptor(loggingInterceptor)
                 .build();
@@ -99,7 +119,7 @@ public class NetworkModule {
 
     @Provides
     @Singleton
-    public TravellerApiService provideTravellerApiService(@NonNull Retrofit retrofit) {
+    public TravellerApiService provideTravellerApiService(Retrofit retrofit) {
         return retrofit.create(TravellerApiService.class);
     }
 }
