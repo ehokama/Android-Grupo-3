@@ -26,7 +26,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 @InstallIn(SingletonComponent.class)
 public class NetworkModule {
 
-    private static final String BASE_URL = "http://172.20.150.47:8080/";
+    private static final String BASE_URL = "http://10.0.2.2:8080/";
     private static final String TAG = "NetworkModule";
 
     @Provides
