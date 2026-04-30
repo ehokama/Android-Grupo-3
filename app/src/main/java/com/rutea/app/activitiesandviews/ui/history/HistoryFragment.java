@@ -51,6 +51,7 @@ import retrofit2.Response;
 
 @AndroidEntryPoint
 public class HistoryFragment extends Fragment {
+    private boolean onlyCompleted = false;
 
     private RecyclerView rvHistory;
     private ProgressBar progressHistory;
@@ -80,7 +81,16 @@ public class HistoryFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        if (getArguments() != null) {
+            onlyCompleted = getArguments().getBoolean("onlyCompleted", false);
+        }
+        TextView tvTitle = view.findViewById(R.id.tvTitle);
 
+        if (onlyCompleted) {
+            tvTitle.setText("Historial de Actividades (Finalizadas)");
+        } else {
+            tvTitle.setText("Mis Actividades (Todas)");
+        }
         rvHistory              = view.findViewById(R.id.rvHistory);
         progressHistory        = view.findViewById(R.id.progressHistory);
         tvStateHistory         = view.findViewById(R.id.tvStateHistory);
@@ -294,6 +304,8 @@ public class HistoryFragment extends Fragment {
     private void applyFilters() {
         List<ReserveDto> filtered = new ArrayList<>();
         for (ReserveDto r : allReserves) {
+            if (onlyCompleted && !"COMPLETED".equalsIgnoreCase(r.getState())) continue;
+
             if (!matchesCountry(r))   continue;
             if (!matchesDateRange(r)) continue;
             filtered.add(r);

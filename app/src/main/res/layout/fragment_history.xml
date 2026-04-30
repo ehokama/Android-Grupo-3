@@ -17,10 +17,11 @@
         android:paddingBottom="4dp">
 
         <TextView
+            android:id="@+id/tvTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Historial de Actividades"
+            android:text="Mis Actividades"
             android:textAppearance="?attr/textAppearanceTitleLarge" />
 
         <com.google.android.material.button.MaterialButton

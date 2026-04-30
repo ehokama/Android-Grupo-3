@@ -107,8 +107,11 @@ public class ProfileFragment extends Fragment {
         });
 
         view.findViewById(R.id.btnMyActivities).setOnClickListener(v -> {
+            Bundle args = new Bundle();
+            args.putBoolean("onlyCompleted", true);
+
             Navigation.findNavController(view)
-                    .navigate(R.id.action_profile_to_history);
+                    .navigate(R.id.action_profile_to_history, args);
         });
 
         view.findViewById(R.id.btnCerrarSesion).setOnClickListener(v -> {

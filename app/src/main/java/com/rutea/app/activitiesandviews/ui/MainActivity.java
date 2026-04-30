@@ -70,8 +70,10 @@ public class MainActivity extends AppCompatActivity {
             navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
                 int id = destination.getId();
 
-                if (id == R.id.homeFragment ||
-                        id == R.id.profileFragment) {
+                if (    id == R.id.homeFragment ||
+                        id == R.id.profileFragment ||
+                        id == R.id.historyFragment
+                        ) {
 
                     bottomNavigationView.setVisibility(View.VISIBLE);
                 } else {
