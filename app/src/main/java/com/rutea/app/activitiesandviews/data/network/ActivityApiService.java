@@ -47,4 +47,5 @@ public interface ActivityApiService {
 
     @GET("/api/activities/recommendations")
     Call<List<ActivityDto>> getRecommendations();
+
 }

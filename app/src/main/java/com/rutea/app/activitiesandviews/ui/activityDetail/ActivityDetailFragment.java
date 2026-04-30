@@ -35,7 +35,7 @@ import javax.inject.Inject;
 public class ActivityDetailFragment extends Fragment {
 
     // Base URL for image raw endpoint (must match NetworkModule)
-    private static final String IMAGE_BASE_URL = "http://172.20.150.47:8080/api/images/";
+    private static final String IMAGE_BASE_URL = "http://10.0.2.2:8080/api/images/";
 
     @Inject
     ActivityApiService activityApiService;

@@ -40,6 +40,7 @@
         android:textColor="#212121"
         android:textStyle="bold" />
 
+
     <com.google.android.material.chip.ChipGroup
         android:id="@+id/cgEditPreferencias"
         android:layout_width="match_parent"

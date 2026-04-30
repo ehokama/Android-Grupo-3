@@ -13,4 +13,8 @@ public interface CachedProfileDao {
 
     @Query("SELECT * FROM cached_profile WHERE email = :email LIMIT 1")
     CachedProfile getByEmail(String email);
+
+    @Query("DELETE FROM cached_profile WHERE email = :email")
+    void deleteByEmail(String email);
+
 }

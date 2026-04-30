@@ -13,6 +13,9 @@
         <action
             android:id="@+id/action_home_to_detail"
             app:destination="@id/activityDetailFragment" />
+        <action
+            android:id="@+id/action_home_to_search"
+            app:destination="@id/searchFragment" />
     </fragment>
 
 
@@ -54,6 +57,16 @@
         <action
             android:id="@+id/action_historyFragment_to_reserveDetailFragment"
             app:destination="@id/reserveDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.rutea.app.activitiesandviews.ui.search.SearchFragment"
+        android:label="Search">
+
+        <action
+            android:id="@+id/action_search_to_detail"
+            app:destination="@id/activityDetailFragment" />
     </fragment>
 
     <fragment
