@@ -18,12 +18,17 @@ public class CachedReserve {
     public Double totalPrice;
     public String state;
 
-    public CachedReserve(@NonNull Long idReserve, String userEmail, String activityTitle,
-                         String creationDate, Integer numberOfPeople, Double totalPrice, String state) {
+    public String reservationDate;
+
+    public Long activityId;
+
+    public CachedReserve(@NonNull Long idReserve, String userEmail, String activityTitle, Long activityId,
+                         String reservationDate, Integer numberOfPeople, Double totalPrice, String state) {
         this.idReserve = idReserve;
         this.userEmail = userEmail;
         this.activityTitle = activityTitle;
-        this.creationDate = creationDate;
+        this.activityId = activityId;
+        this.reservationDate = reservationDate;
         this.numberOfPeople = numberOfPeople;
         this.totalPrice = totalPrice;
         this.state = state;
