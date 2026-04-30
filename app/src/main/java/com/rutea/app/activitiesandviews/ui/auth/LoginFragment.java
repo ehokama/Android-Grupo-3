@@ -1,6 +1,8 @@
 package com.rutea.app.activitiesandviews.ui.auth;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -120,7 +122,22 @@ public class LoginFragment extends Fragment {
 
         // Siempre verificar disponibilidad del hardware antes de lanzar el prompt
         BiometricManager manager = BiometricManager.from(requireContext());
-        if (manager.canAuthenticate(ALLOWED_AUTHENTICATORS) != BiometricManager.BIOMETRIC_SUCCESS) {
+        int canAuth = manager.canAuthenticate(ALLOWED_AUTHENTICATORS);
+
+        if (canAuth == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED) {
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Sin seguridad configurada")
+                    .setMessage("Tu dispositivo no tiene huella, PIN ni patrón configurados. ¿Querés configurarlos ahora para poder usar el acceso biométrico?")
+                    .setPositiveButton("Ir a Ajustes", (dialog, which) -> {
+                        startActivity(new Intent(Settings.ACTION_SECURITY_SETTINGS));
+                        showCredentialForm();
+                    })
+                    .setNegativeButton("No, gracias", (dialog, which) -> showCredentialForm())
+                    .show();
+            return;
+        }
+
+        if (canAuth != BiometricManager.BIOMETRIC_SUCCESS) {
             showCredentialForm();
             return;
         }
@@ -179,8 +196,10 @@ public class LoginFragment extends Fragment {
                     tokenManager.saveEncryptedToken(authResponse.getToken());
                     goToHome(authResponse.getName() != null ? authResponse.getName() : authResponse.getEmail());
                 })
-                .setNegativeButton("No, gracias", (dialog, which) ->
-                        goToHome(authResponse.getName() != null ? authResponse.getName() : authResponse.getEmail()))
+                .setNegativeButton("No, gracias", (dialog, which) -> {
+                    tokenManager.setBiometricEnabled(false);
+                    goToHome(authResponse.getName() != null ? authResponse.getName() : authResponse.getEmail());
+                })
                 .setCancelable(false)
                 .show();
     }
