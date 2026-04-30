@@ -15,10 +15,6 @@
             app:destination="@id/activityDetailFragment" />
     </fragment>
 
-    <fragment
-        android:id="@+id/reserveDetailFragment"
-        android:name="com.rutea.app.activitiesandviews.ui.history.ReserveDetailFragment"
-        android:label="Detalle de reserva" />
 
     <fragment
         android:id="@+id/profileFragment"
@@ -40,10 +36,21 @@
     </fragment>
 
     <fragment
+        android:id="@+id/reserveDetailFragment"
+        android:name="com.rutea.app.activitiesandviews.ui.history.ReserveDetailFragment"
+        android:label="Reservation Detail"
+        tools:layout="@layout/fragment_reserve_detail">
+    </fragment>
+
+    <fragment
         android:id="@+id/historyFragment"
         android:name="com.rutea.app.activitiesandviews.ui.history.HistoryFragment"
         android:label="Historial de Viajes"
         tools:layout="@layout/fragment_history">
+        <argument
+            android:name="onlyCompleted"
+            app:argType="boolean"
+            android:defaultValue="false" />
         <action
             android:id="@+id/action_historyFragment_to_reserveDetailFragment"
             app:destination="@id/reserveDetailFragment" />
