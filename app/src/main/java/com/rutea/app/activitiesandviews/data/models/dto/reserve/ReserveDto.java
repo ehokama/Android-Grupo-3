@@ -24,6 +24,11 @@ public class ReserveDto {
 
     private Long activityId;
     private List<ImageDto> activityImages;
+    private boolean canRate;
+    private boolean alreadyRated;
+    private Integer myActivityRating;
+    private Integer myGuideRating;
+    private String myComment;
 
     @SerializedName("country")
     private String country;
@@ -36,6 +41,46 @@ public class ReserveDto {
     }
     public void setActivityImages(List<ImageDto> activityImages) {
         this.activityImages = activityImages;
+    }
+
+    public boolean isCanRate() {
+        return canRate;
+    }
+
+    public void setCanRate(boolean canRate) {
+        this.canRate = canRate;
+    }
+
+    public boolean isAlreadyRated() {
+        return alreadyRated;
+    }
+
+    public void setAlreadyRated(boolean alreadyRated) {
+        this.alreadyRated = alreadyRated;
+    }
+
+    public Integer getMyActivityRating() {
+        return myActivityRating;
+    }
+
+    public void setMyActivityRating(Integer myActivityRating) {
+        this.myActivityRating = myActivityRating;
+    }
+
+    public Integer getMyGuideRating() {
+        return myGuideRating;
+    }
+
+    public void setMyGuideRating(Integer myGuideRating) {
+        this.myGuideRating = myGuideRating;
+    }
+
+    public String getMyComment() {
+        return myComment;
+    }
+
+    public void setMyComment(String myComment) {
+        this.myComment = myComment;
     }
     public String getReservationDate() {
         return reservationDate;

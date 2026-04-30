@@ -8,6 +8,7 @@ import com.rutea.app.activitiesandviews.data.network.ActivityApiService;
 import com.rutea.app.activitiesandviews.data.network.AuthApiService;
 import com.rutea.app.activitiesandviews.data.network.DisponibilityApiService;
 import com.rutea.app.activitiesandviews.data.network.ReserveApiService;
+import com.rutea.app.activitiesandviews.data.network.ReviewApiService;
 import com.rutea.app.activitiesandviews.data.network.TravellerApiService;
 import com.rutea.app.activitiesandviews.data.local.TokenManager;
 
@@ -115,6 +116,12 @@ public class NetworkModule {
     @Singleton
     public ReserveApiService provideReserveApiService(Retrofit retrofit) {
         return retrofit.create(ReserveApiService.class);
+    }
+
+    @Provides
+    @Singleton
+    public ReviewApiService provideReviewApiService(Retrofit retrofit) {
+        return retrofit.create(ReviewApiService.class);
     }
 
     @Provides
