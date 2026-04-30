@@ -27,10 +27,12 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.VH> {
 
     private final List<ReserveDto> items;
     private final Consumer<Long> onCancelClick;
+    private final Consumer<ReserveDto> onRateClick;
 
-    public HistoryAdapter(List<ReserveDto> items, Consumer<Long> onCancelClick) {
+    public HistoryAdapter(List<ReserveDto> items, Consumer<Long> onCancelClick, Consumer<ReserveDto> onRateClick) {
         this.items = items;
         this.onCancelClick = onCancelClick;
+        this.onRateClick = onRateClick;
     }
 
     @NonNull
@@ -53,7 +55,8 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.VH> {
         ImageView ivActivityImage;
         TextView tvTitle, tvDate, tvPeople, tvPrice, tvReserveId, tvActivityDate;
         Chip chipState;
-        Button btnCancel;
+        Button btnCancel, btnRate;
+        TextView tvReviewSummary;
 
         VH(@NonNull View v) {
             super(v);
@@ -66,6 +69,8 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.VH> {
             tvReserveId     = v.findViewById(R.id.tvReserveId);
             chipState       = v.findViewById(R.id.chipState);
             btnCancel       = v.findViewById(R.id.btnCancel);
+            btnRate         = v.findViewById(R.id.btnRate);
+            tvReviewSummary = v.findViewById(R.id.tvReviewSummary);
         }
 
         void bind(ReserveDto r) {
@@ -86,6 +91,26 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.VH> {
             btnCancel.setOnClickListener(v -> {
                 if (onCancelClick != null) onCancelClick.accept(r.getIdReserve());
             });
+
+            boolean showRateButton = r.isCanRate() && !r.isAlreadyRated();
+            btnRate.setVisibility(showRateButton ? View.VISIBLE : View.GONE);
+            btnRate.setOnClickListener(v -> {
+                if (onRateClick != null) onRateClick.accept(r);
+            });
+
+            if (r.isAlreadyRated() && r.getMyActivityRating() != null && r.getMyGuideRating() != null) {
+                String summary = "Tu calificación: Actividad " + r.getMyActivityRating() + "/5 • Guía " + r.getMyGuideRating() + "/5";
+                if (r.getMyComment() != null && !r.getMyComment().trim().isEmpty()) {
+                    summary += "\n\"" + r.getMyComment().trim() + "\"";
+                }
+                tvReviewSummary.setText(summary);
+                tvReviewSummary.setVisibility(View.VISIBLE);
+            } else if ("COMPLETED".equals(state) && !r.isCanRate() && !r.isAlreadyRated()) {
+                tvReviewSummary.setText("Ventana de calificación cerrada (48h).");
+                tvReviewSummary.setVisibility(View.VISIBLE);
+            } else {
+                tvReviewSummary.setVisibility(View.GONE);
+            }
 
 // ─── Imagen desde lista de imágenes de la actividad ───
             if (r.getActivityImages() != null && !r.getActivityImages().isEmpty()) {

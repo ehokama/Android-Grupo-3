@@ -1,8 +1,11 @@
 package com.rutea.app.activitiesandviews.ui.history;
 
 import android.os.Bundle;
+import android.text.InputFilter;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -17,11 +20,19 @@ import com.rutea.app.R;
 import com.rutea.app.activitiesandviews.data.local.TokenManager;
 import com.rutea.app.activitiesandviews.data.local.db.CachedReserve;
 import com.rutea.app.activitiesandviews.data.local.db.CachedReserveDao;
+import com.rutea.app.activitiesandviews.data.models.dto.review.CreateReviewRequest;
+import com.rutea.app.activitiesandviews.data.models.dto.review.ReviewDto;
 import com.rutea.app.activitiesandviews.data.models.dto.reserve.ReserveDto;
 import com.rutea.app.activitiesandviews.data.network.ReserveApiService;
+import com.rutea.app.activitiesandviews.data.network.ReviewApiService;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
@@ -39,8 +50,10 @@ public class HistoryFragment extends Fragment {
     private HistoryAdapter adapter;
 
     @Inject ReserveApiService reserveApiService;
+    @Inject ReviewApiService reviewApiService;
     @Inject TokenManager tokenManager;
     @Inject CachedReserveDao cachedReserveDao;
+    private final Map<Long, ReviewDto> myReviewsByActivity = new HashMap<>();
 
     public HistoryFragment() {
         super(R.layout.fragment_history);
@@ -116,7 +129,7 @@ public class HistoryFragment extends Fragment {
                     return;
                 }
 
-                showReserves(reserves);
+                loadMyReviewsThenShow(reserves);
                 saveToCacheAsync(reserves);
             }
 
@@ -131,11 +144,78 @@ public class HistoryFragment extends Fragment {
         });
     }
 
+    private void loadMyReviewsThenShow(List<ReserveDto> reserves) {
+        reviewApiService.getMyReviews().enqueue(new Callback<List<ReviewDto>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<ReviewDto>> call, @NonNull Response<List<ReviewDto>> response) {
+                myReviewsByActivity.clear();
+                if (response.isSuccessful() && response.body() != null) {
+                    for (ReviewDto review : response.body()) {
+                        if (review.getActivityId() != null && !myReviewsByActivity.containsKey(review.getActivityId())) {
+                            myReviewsByActivity.put(review.getActivityId(), review);
+                        }
+                    }
+                }
+                showReserves(reserves);
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<List<ReviewDto>> call, @NonNull Throwable t) {
+                myReviewsByActivity.clear();
+                showReserves(reserves);
+            }
+        });
+    }
+
     private void showReserves(List<ReserveDto> reserves) {
-        adapter = new HistoryAdapter(reserves, this::onCancelClicked);
+        applyRatingState(reserves);
+        adapter = new HistoryAdapter(reserves, this::onCancelClicked, this::onRateClicked);
         rvHistory.setAdapter(adapter);
         tvStateHistory.setVisibility(View.GONE);
         rvHistory.setVisibility(View.VISIBLE);
+    }
+
+    private void applyRatingState(List<ReserveDto> reserves) {
+        LocalDateTime now = LocalDateTime.now();
+        for (ReserveDto reserve : reserves) {
+            ReviewDto review = reserve.getActivityId() != null ? myReviewsByActivity.get(reserve.getActivityId()) : null;
+            boolean alreadyRated = review != null;
+            boolean completed = "COMPLETED".equalsIgnoreCase(reserve.getState());
+            boolean withinWindow = isWithinRatingWindow(reserve.getReservationDate(), now);
+
+            reserve.setAlreadyRated(alreadyRated);
+            reserve.setCanRate(completed && withinWindow && !alreadyRated);
+
+            if (alreadyRated) {
+                reserve.setMyActivityRating(review.getRating());
+                reserve.setMyGuideRating(review.getGuideRating());
+                reserve.setMyComment(review.getComment());
+            } else {
+                reserve.setMyActivityRating(null);
+                reserve.setMyGuideRating(null);
+                reserve.setMyComment(null);
+            }
+        }
+    }
+
+    private boolean isWithinRatingWindow(String reservationDate, LocalDateTime now) {
+        LocalDateTime activityDate = parseDate(reservationDate);
+        return activityDate != null && now.isBefore(activityDate.plusHours(48));
+    }
+
+    private LocalDateTime parseDate(String raw) {
+        if (raw == null || raw.trim().isEmpty()) return null;
+        List<DateTimeFormatter> formats = new ArrayList<>();
+        formats.add(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        formats.add(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.getDefault()));
+        formats.add(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.getDefault()));
+        for (DateTimeFormatter formatter : formats) {
+            try {
+                return LocalDateTime.parse(raw.trim(), formatter);
+            } catch (Exception ignored) {
+            }
+        }
+        return null;
     }
 
     // ─── Cancelar ────────────────────────────────────────────────────────────
@@ -169,6 +249,70 @@ public class HistoryFragment extends Fragment {
                 if (!isAdded()) return;
                 Toast.makeText(requireContext(), "Error de red al cancelar", Toast.LENGTH_SHORT).show();
                 loadHistory();
+            }
+        });
+    }
+
+    private void onRateClicked(ReserveDto reserve) {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_rate_activity, null);
+        RatingBar rbActivity = dialogView.findViewById(R.id.rbActivityRating);
+        RatingBar rbGuide = dialogView.findViewById(R.id.rbGuideRating);
+        TextView tvActivityRatingValue = dialogView.findViewById(R.id.tvActivityRatingValue);
+        TextView tvGuideRatingValue = dialogView.findViewById(R.id.tvGuideRatingValue);
+        EditText etComment = dialogView.findViewById(R.id.etReviewComment);
+        etComment.setFilters(new InputFilter[]{new InputFilter.LengthFilter(300)});
+        tvActivityRatingValue.setText(Math.round(rbActivity.getRating()) + "/5");
+        tvGuideRatingValue.setText(Math.round(rbGuide.getRating()) + "/5");
+
+        rbActivity.setOnRatingBarChangeListener((ratingBar, rating, fromUser) ->
+                tvActivityRatingValue.setText(Math.round(rating) + "/5"));
+        rbGuide.setOnRatingBarChangeListener((ratingBar, rating, fromUser) ->
+                tvGuideRatingValue.setText(Math.round(rating) + "/5"));
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Calificar experiencia")
+                .setView(dialogView)
+                .setPositiveButton("Enviar", (dialog, which) -> {
+                    int activityRating = Math.round(rbActivity.getRating());
+                    int guideRating = Math.round(rbGuide.getRating());
+                    String comment = etComment.getText() != null ? etComment.getText().toString().trim() : "";
+
+                    if (activityRating < 1 || guideRating < 1) {
+                        Toast.makeText(requireContext(), "Tenés que elegir ambas calificaciones (1 a 5).", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    submitReview(reserve, activityRating, guideRating, comment);
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void submitReview(ReserveDto reserve, int activityRating, int guideRating, String comment) {
+        if (reserve.getActivityId() == null) {
+            Toast.makeText(requireContext(), "No se pudo identificar la actividad.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        setState(true, null);
+        CreateReviewRequest request = new CreateReviewRequest(activityRating, guideRating, comment, reserve.getActivityId());
+        reviewApiService.createReview(request).enqueue(new Callback<ReviewDto>() {
+            @Override
+            public void onResponse(@NonNull Call<ReviewDto> call, @NonNull Response<ReviewDto> response) {
+                if (!isAdded()) return;
+                if (response.isSuccessful()) {
+                    Toast.makeText(requireContext(), "Gracias por tu calificación.", Toast.LENGTH_SHORT).show();
+                    loadHistory();
+                } else {
+                    setState(false, null);
+                    Toast.makeText(requireContext(), "No se pudo enviar la calificación.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ReviewDto> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
+                setState(false, null);
+                Toast.makeText(requireContext(), "Error de red al enviar la calificación.", Toast.LENGTH_SHORT).show();
             }
         });
     }
