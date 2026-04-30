@@ -1,6 +1,9 @@
 package com.rutea.app.activitiesandviews.data.models.dto.reserve;
 
 import com.google.gson.annotations.SerializedName;
+import com.rutea.app.activitiesandviews.data.models.dto.activity.ImageDto;
+
+import java.util.List;
 
 public class ReserveDto {
     @SerializedName("id_reserve")
@@ -16,6 +19,33 @@ public class ReserveDto {
     private Long disponibilityId;
     private Double disponibilityPrice;
     private String activityTitle;
+
+    private String reservationDate;
+
+    private Long activityId;
+    private List<ImageDto> activityImages; // <-- agregar esto
+
+    public List<ImageDto> getActivityImages() {
+        return activityImages;
+    }
+    public void setActivityImages(List<ImageDto> activityImages) {
+        this.activityImages = activityImages;
+    }
+    public String getReservationDate() {
+        return reservationDate;
+    }
+
+    public void setReservationDate(String reservationDate) {
+        this.reservationDate = reservationDate;
+    }
+
+    public Long getActivityId() {
+        return activityId;
+    }
+
+    public void setActivityId(Long activityId) {
+        this.activityId = activityId;
+    }
 
     public Long getIdReserve() {
         return idReserve;
