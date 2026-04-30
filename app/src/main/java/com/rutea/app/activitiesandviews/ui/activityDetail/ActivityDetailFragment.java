@@ -1,11 +1,14 @@
 package com.rutea.app.activitiesandviews.ui.activityDetail;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -14,12 +17,16 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
+import com.bumptech.glide.Glide;
 import com.rutea.app.R;
 import com.rutea.app.activitiesandviews.data.local.TokenManager;
 import com.rutea.app.activitiesandviews.data.local.db.CachedFavorite;
 import com.rutea.app.activitiesandviews.data.local.db.CachedFavoriteDao;
 import com.rutea.app.activitiesandviews.data.network.ActivityApiService;
 import com.rutea.app.activitiesandviews.data.models.dto.activity.ActivityDto;
+import com.rutea.app.activitiesandviews.data.models.dto.activity.ImageDto;
+
+import java.util.List;
 
 import java.util.concurrent.Executors;
 
@@ -33,6 +40,9 @@ import javax.inject.Inject;
 @AndroidEntryPoint
 public class ActivityDetailFragment extends Fragment {
 
+    // Base URL for image raw endpoint (must match NetworkModule)
+    private static final String IMAGE_BASE_URL = "http://172.20.150.47:8080/api/images/";
+
     @Inject
     ActivityApiService activityApiService;
 
@@ -45,6 +55,7 @@ public class ActivityDetailFragment extends Fragment {
     private ImageButton btnFavorite;
     private boolean isFavorite = false;
     private ActivityDto loadedActivity;
+    private String meetingPointText = null;
 
     @Nullable
     @Override
@@ -58,6 +69,7 @@ public class ActivityDetailFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        ImageView ivHero = view.findViewById(R.id.ivHero);
         TextView tvNombre = view.findViewById(R.id.tvNombre);
         TextView tvDescripcion = view.findViewById(R.id.tvDescripcion);
         TextView tvHorario = view.findViewById(R.id.tvHorario);
@@ -66,6 +78,10 @@ public class ActivityDetailFragment extends Fragment {
         TextView tvGuia = view.findViewById(R.id.tvGuia);
         TextView tvEmpresa = view.findViewById(R.id.tvEmpresa);
         btnFavorite = view.findViewById(R.id.btnFavorite);
+        TextView tvIdioma = view.findViewById(R.id.tvIdioma);
+        TextView tvInclusions = view.findViewById(R.id.tvInclusions);
+        TextView tvCancellation = view.findViewById(R.id.tvCancellation);
+        Button btnMeetingPoint = view.findViewById(R.id.btnMeetingPoint);
 
         long activityId = -1L;
         String fallbackName = "Actividad";
@@ -83,6 +99,10 @@ public class ActivityDetailFragment extends Fragment {
         tvCosto.setText("💲 Precio: -");
         tvGuia.setText("⭐ Rating: -");
         tvEmpresa.setText("🏷️ Categoría: -");
+        tvIdioma.setText("🗣️ Idioma: -");
+        tvInclusions.setText("✅ Incluye: -");
+        tvCancellation.setText("📋 Cancelación: -");
+        btnMeetingPoint.setVisibility(View.GONE);
 
         // Verificar estado de favorito en Room
         if (selectedActivityId > 0) {
@@ -115,6 +135,28 @@ public class ActivityDetailFragment extends Fragment {
                     tvCosto.setText("💲 " + valueOrDefault(dto.getPrice(), "-"));
                     tvGuia.setText("⭐ Rating: " + valueOrDefault(dto.getRating(), "-"));
                     tvEmpresa.setText("🏷️ Categoría: " + valueOrDefault(dto.getCategory(), "-"));
+                    tvIdioma.setText("🗣️ Idioma: " + valueOrDefault(dto.getLanguage(), "-"));
+                    tvInclusions.setText("✅ Incluye: " + valueOrDefault(dto.getInclusions(), "-"));
+                    tvCancellation.setText("📋 Cancelación: " + valueOrDefault(dto.getCancellationPolicy(), "-"));
+
+                    // Load hero image from backend
+                    List<ImageDto> images = dto.getImages();
+                    if (images != null && !images.isEmpty()) {
+                        Long imageId = images.get(0).getIdImage();
+                        if (imageId != null) {
+                            String imageUrl = IMAGE_BASE_URL + imageId + "/raw";
+                            Glide.with(ActivityDetailFragment.this)
+                                    .load(imageUrl)
+                                    .centerCrop()
+                                    .into(ivHero);
+                        }
+                    }
+
+                    // Meeting point button
+                    meetingPointText = dto.getMeetingPoint();
+                    if (meetingPointText != null && !meetingPointText.trim().isEmpty()) {
+                        btnMeetingPoint.setVisibility(View.VISIBLE);
+                    }
                 }
 
                 @Override
@@ -126,6 +168,24 @@ public class ActivityDetailFragment extends Fragment {
         }
 
         btnFavorite.setOnClickListener(v -> toggleFavorite(selectedActivityId));
+
+        // Meeting point: abre Google Maps buscando la dirección
+        btnMeetingPoint.setOnClickListener(v -> {
+            if (meetingPointText != null && !meetingPointText.trim().isEmpty()) {
+                Uri gmmIntentUri = Uri.parse("geo:0,0?q=" + Uri.encode(meetingPointText));
+                Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+                mapIntent.setPackage("com.google.android.apps.maps");
+                if (mapIntent.resolveActivity(requireContext().getPackageManager()) != null) {
+                    startActivity(mapIntent);
+                } else {
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("https://www.google.com/maps/search/?api=1&query=" + Uri.encode(meetingPointText)));
+                    startActivity(browserIntent);
+                }
+            } else {
+                Toast.makeText(requireContext(), "Punto de encuentro no disponible.", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         Button btnReservar = view.findViewById(R.id.btnReservar);
         btnReservar.setOnClickListener(v -> {

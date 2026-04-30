@@ -73,7 +73,7 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <!-- descripc -->
+            <!-- descripcion -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -104,7 +104,7 @@
                 android:id="@+id/tvHorario"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="🕐 Horario"
+                android:text="🕐 Duración"
                 android:textColor="#424242"
                 android:textSize="14sp" />
 
@@ -131,7 +131,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:text="🧭 Guía"
+                android:text="⭐ Rating"
                 android:textColor="#424242"
                 android:textSize="14sp" />
 
@@ -140,9 +140,48 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:text="🏢 Empresa"
+                android:text="🏷️ Categoría"
                 android:textColor="#424242"
                 android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tvIdioma"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="🗣️ Idioma"
+                android:textColor="#424242"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tvInclusions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="✅ Incluye"
+                android:textColor="#424242"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tvCancellation"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="📋 Cancelación"
+                android:textColor="#424242"
+                android:textSize="14sp" />
+
+            <!-- Punto de encuentro -->
+            <Button
+                android:id="@+id/btnMeetingPoint"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="24dp"
+                android:text="📍 Punto de encuentro"
+                android:textAllCaps="false"
+                android:textSize="14sp"
+                android:backgroundTint="#4CAF50"
+                android:textColor="#FFFFFF" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

@@ -59,24 +59,9 @@
                     android:orientation="horizontal">
 
                     <Spinner
-                        android:id="@+id/spinnerDia"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="8dp" />
-
-                    <Spinner
-                        android:id="@+id/spinnerMes"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="2"
-                        android:layout_marginEnd="8dp" />
-
-                    <Spinner
-                        android:id="@+id/spinnerAnio"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1.5" />
+                        android:id="@+id/spinnerFecha"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>

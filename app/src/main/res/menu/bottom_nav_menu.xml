@@ -7,9 +7,9 @@
         android:title="Home" />
 
     <item
-        android:id="@+id/myActivitiesFragment"
+        android:id="@+id/historyFragment"
         android:icon="@drawable/ic_trips"
-        android:title="Mis viajes" />
+        android:title="Mis Actividades" />
 
     <item
         android:id="@+id/favoritesFragment"

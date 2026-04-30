@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="8dp"
+    android:paddingBottom="4dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Calificación de la actividad"
+        android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+    <RatingBar
+        android:id="@+id/rbActivityRating"
+        style="?android:attr/ratingBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:isIndicator="false"
+        android:numStars="5"
+        android:rating="5"
+        android:stepSize="1"
+        android:layout_marginTop="4dp" />
+
+    <TextView
+        android:id="@+id/tvActivityRatingValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="5/5"
+        android:textAppearance="?attr/textAppearanceBodySmall" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Calificación del guía"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:layout_marginTop="10dp" />
+
+    <RatingBar
+        android:id="@+id/rbGuideRating"
+        style="?android:attr/ratingBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:isIndicator="false"
+        android:numStars="5"
+        android:rating="5"
+        android:stepSize="1"
+        android:layout_marginTop="4dp" />
+
+    <TextView
+        android:id="@+id/tvGuideRatingValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="5/5"
+        android:textAppearance="?attr/textAppearanceBodySmall" />
+
+    <EditText
+        android:id="@+id/etReviewComment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:hint="Comentario (opcional, máximo 300)"
+        android:inputType="textMultiLine"
+        android:maxLines="4"
+        android:minLines="3" />
+
+</LinearLayout>
