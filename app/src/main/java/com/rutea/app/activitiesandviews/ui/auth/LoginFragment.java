@@ -66,6 +66,7 @@ public class LoginFragment extends Fragment {
     private Button btnMainAction;
     private TextView tvSwitchMode, tvTimer, textRegistro;
     private android.widget.ProgressBar progressBar;
+    private View btnReenviarOtp;
 
     @Nullable
     @Override
@@ -94,6 +95,7 @@ public class LoginFragment extends Fragment {
         tvTimer = view.findViewById(R.id.tvTimer);
         textRegistro = view.findViewById(R.id.tvRegistrate);
         progressBar = view.findViewById(R.id.progressBar);
+        btnReenviarOtp = view.findViewById(R.id.btnReenviarOtp);
 
         setupClickListeners();
 
@@ -237,6 +239,8 @@ public class LoginFragment extends Fragment {
                 Navigation.findNavController(v).navigate(R.id.action_login_to_register)
         );
 
+        btnReenviarOtp.setOnClickListener(v -> resendOtp());
+
         // Permite volver al formulario desde la pantalla biométrica
         View btnUsarCredenciales = requireView().findViewById(R.id.btnUsarCredenciales);
         btnUsarCredenciales.setOnClickListener(v -> showCredentialForm());
@@ -253,6 +257,7 @@ public class LoginFragment extends Fragment {
                 tilPassword.setVisibility(View.VISIBLE);
                 tilOtpCode.setVisibility(View.GONE);
                 tvTimer.setVisibility(View.GONE);
+                btnReenviarOtp.setVisibility(View.GONE);
                 btnMainAction.setText("Ingresar");
                 tvSwitchMode.setText("Ingresar con código al email");
                 btnMainAction.setEnabled(true);
@@ -261,6 +266,7 @@ public class LoginFragment extends Fragment {
                 tilPassword.setVisibility(View.GONE);
                 tilOtpCode.setVisibility(View.GONE);
                 tvTimer.setVisibility(View.GONE);
+                btnReenviarOtp.setVisibility(View.GONE);
                 btnMainAction.setText("Pedir Código OTP");
                 tvSwitchMode.setText("Volver a contraseña");
                 btnMainAction.setEnabled(true);
@@ -269,8 +275,9 @@ public class LoginFragment extends Fragment {
                 tilPassword.setVisibility(View.GONE);
                 tilOtpCode.setVisibility(View.VISIBLE);
                 tvTimer.setVisibility(View.VISIBLE);
+                btnReenviarOtp.setVisibility(View.GONE);
                 btnMainAction.setText("Verificar y Entrar");
-                tvSwitchMode.setText("Cambiar método / Reenviar");
+                tvSwitchMode.setText("Cambiar método");
                 startTimer();
                 break;
         }
@@ -389,6 +396,7 @@ public class LoginFragment extends Fragment {
     private void setLoading(boolean loading) {
         progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
         btnMainAction.setEnabled(!loading);
+        btnReenviarOtp.setEnabled(!loading);
         etNombre.setEnabled(!loading);
         etPassword.setEnabled(!loading);
         etOtpCode.setEnabled(!loading);
@@ -397,6 +405,7 @@ public class LoginFragment extends Fragment {
     private void startTimer() {
         if (countDownTimer != null) countDownTimer.cancel();
         btnMainAction.setEnabled(true);
+        btnReenviarOtp.setVisibility(View.GONE);
 
         countDownTimer = new android.os.CountDownTimer(60000, 1000) {
             @Override
@@ -406,9 +415,44 @@ public class LoginFragment extends Fragment {
 
             @Override
             public void onFinish() {
-                tvTimer.setText("Ya podés solicitar un nuevo código");
+                if (!isAdded()) return;
+                tvTimer.setText("¿No te llegó el código?");
+                btnReenviarOtp.setVisibility(View.VISIBLE);
             }
         }.start();
+    }
+
+    private void resendOtp() {
+        String email = etNombre.getText().toString().trim();
+        if (email.isEmpty()) {
+            tilEmail.setError("Ingresá tu email");
+            return;
+        }
+
+        setLoading(true);
+        authApiService.requestOtp(new OtpRequest(email)).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                setLoading(false);
+                if (!isAdded()) return;
+                if (response.isSuccessful()) {
+                    etOtpCode.setText("");
+                    tilOtpCode.setError(null);
+                    btnReenviarOtp.setVisibility(View.GONE);
+                    startTimer();
+                    Toast.makeText(requireContext(), "Código reenviado a tu email", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(requireContext(), "No se pudo reenviar el código", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                setLoading(false);
+                if (!isAdded()) return;
+                Toast.makeText(requireContext(), "Error de red al reenviar código", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
