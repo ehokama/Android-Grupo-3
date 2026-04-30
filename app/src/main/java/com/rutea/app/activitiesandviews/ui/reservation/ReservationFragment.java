@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
@@ -32,6 +33,7 @@ import java.util.Calendar;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import okhttp3.ResponseBody;
@@ -56,9 +58,12 @@ public class ReservationFragment extends Fragment {
     DisponibilityApiService disponibilityApiService;
 
     private Spinner spinnerHorario;
-    private Spinner spinnerDia;
-    private Spinner spinnerMes;
-    private Spinner spinnerAnio;
+    private Spinner spinnerFecha;
+
+    // Map to group disponibilities by date string (e.g. "25/12/2026")
+    private Map<String, List<DisponibilityDto>> disponibilitiesByDate;
+    private List<String> availableDates = new ArrayList<>();
+    private List<DisponibilityDto> currentTimesForDate = new ArrayList<>();
     private Button btnConfirmar;
     private String nombreActividad = "Actividad";
     private long activityId = -1L;
@@ -81,29 +86,21 @@ public class ReservationFragment extends Fragment {
         }
         ((TextView) view.findViewById(R.id.tvNombreActividad)).setText(nombreActividad);
 
-        // --- dia ---
-        spinnerDia = view.findViewById(R.id.spinnerDia);
-        List<String> dias = new ArrayList<>();
-        for (int i = 1; i <= 31; i++) dias.add(String.format("%02d", i));
-        spinnerDia.setAdapter(simpleAdapter(dias));
+        // --- fecha ---
+        spinnerFecha = view.findViewById(R.id.spinnerFecha);
+        spinnerFecha.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                updateTimeSpinner(position);
+            }
 
-        // --- mes ---
-        spinnerMes = view.findViewById(R.id.spinnerMes);
-        String[] meses = {"Enero","Febrero","Marzo","Abril","Mayo","Junio",
-                "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"};
-        spinnerMes.setAdapter(simpleAdapter(java.util.Arrays.asList(meses)));
-
-        // --- año ---
-        spinnerAnio = view.findViewById(R.id.spinnerAnio);
-        int anioActual = Calendar.getInstance().get(Calendar.YEAR);
-        spinnerAnio.setAdapter(simpleAdapter(
-                java.util.Arrays.asList(String.valueOf(anioActual), String.valueOf(anioActual + 1))));
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
 
         // --- horario ---
         spinnerHorario = view.findViewById(R.id.spinnerHorario);
-        List<String> horarios = new ArrayList<>();
-        for (int h = 8; h <= 20; h++) horarios.add(String.format("%02d:00", h));
-        spinnerHorario.setAdapter(simpleAdapter(horarios));
 
         // --- cupo personas ---
         tvPersonas = view.findViewById(R.id.tvPersonas);
@@ -118,17 +115,17 @@ public class ReservationFragment extends Fragment {
         btnConfirmar = view.findViewById(R.id.btnConfirmar);
         loadDisponibilities();
         btnConfirmar.setOnClickListener(v -> {
-            if (selectedDisponibilities.isEmpty()) {
-                Toast.makeText(requireContext(), "No hay horarios disponibles para esta actividad.", Toast.LENGTH_SHORT).show();
+            if (currentTimesForDate.isEmpty()) {
+                Toast.makeText(requireContext(), "No hay horarios disponibles para esta fecha.", Toast.LENGTH_SHORT).show();
                 return;
             }
             int position = spinnerHorario.getSelectedItemPosition();
-            if (position < 0 || position >= selectedDisponibilities.size()) {
+            if (position < 0 || position >= currentTimesForDate.size()) {
                 Toast.makeText(requireContext(), "Seleccioná un horario válido.", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            DisponibilityDto selected = selectedDisponibilities.get(position);
+            DisponibilityDto selected = currentTimesForDate.get(position);
             Integer quota = selected.getDisponibleQuota();
             if (quota != null && personas > quota) {
                 Toast.makeText(requireContext(), "No hay cupos suficientes para esa disponibilidad.", Toast.LENGTH_SHORT).show();
@@ -205,14 +202,24 @@ public class ReservationFragment extends Fragment {
                     return;
                 }
 
-                List<String> labels = selectedDisponibilities.stream()
-                        .map(item -> {
-                            String[] dateTime = splitDateTime(item.getHour());
-                            return dateTime[0] + " - " + dateTime[1] + " (" + item.getDisponibleQuota() + " cupos)";
-                        })
+                // Group by date
+                disponibilitiesByDate = selectedDisponibilities.stream()
+                        .collect(Collectors.groupingBy(item -> splitDateTime(item.getHour())[0]));
+
+                // Extract unique dates preserving the sorted order
+                availableDates = selectedDisponibilities.stream()
+                        .map(item -> splitDateTime(item.getHour())[0])
+                        .distinct()
                         .collect(Collectors.toList());
-                spinnerHorario.setAdapter(simpleAdapter(labels));
-                btnConfirmar.setEnabled(true);
+
+                // Populate date spinner
+                spinnerFecha.setAdapter(simpleAdapter(availableDates));
+
+                // Trigger an initial update for the times spinner
+                if (!availableDates.isEmpty()) {
+                    updateTimeSpinner(0);
+                    btnConfirmar.setEnabled(true);
+                }
             }
 
             @Override
@@ -223,6 +230,22 @@ public class ReservationFragment extends Fragment {
                 Toast.makeText(requireContext(), "Error de red al cargar disponibilidades.", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void updateTimeSpinner(int datePosition) {
+        if (datePosition < 0 || datePosition >= availableDates.size()) return;
+
+        String selectedDate = availableDates.get(datePosition);
+        currentTimesForDate = disponibilitiesByDate.getOrDefault(selectedDate, new ArrayList<>());
+
+        List<String> labels = currentTimesForDate.stream()
+                .map(item -> {
+                    String[] dateTime = splitDateTime(item.getHour());
+                    return dateTime[1] + " (" + item.getDisponibleQuota() + " cupos)";
+                })
+                .collect(Collectors.toList());
+
+        spinnerHorario.setAdapter(simpleAdapter(labels));
     }
 
     private String[] splitDateTime(String rawDateTime) {

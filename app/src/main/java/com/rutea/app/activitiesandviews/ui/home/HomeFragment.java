@@ -143,7 +143,7 @@ public class HomeFragment extends Fragment {
             if (activity.getImages() != null && !activity.getImages().isEmpty()) {
                 Long imageId = activity.getImages().get(0).getIdImage();
 
-                String imageUrl = "http://10.0.2.2:8080/api/images/" + imageId + "/raw";
+                String imageUrl = "http://172.20.150.47:8080/api/images/" + imageId + "/raw";
 
                 Glide.with(requireContext())
                         .load(imageUrl)
