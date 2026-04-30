@@ -23,7 +23,13 @@ public class ReserveDto {
     private String reservationDate;
 
     private Long activityId;
-    private List<ImageDto> activityImages; // <-- agregar esto
+    private List<ImageDto> activityImages;
+
+    @SerializedName("country")
+    private String country;
+
+    public String getCountry() { return country; }
+    public void setCountry(String country) { this.country = country; }
 
     public List<ImageDto> getActivityImages() {
         return activityImages;
