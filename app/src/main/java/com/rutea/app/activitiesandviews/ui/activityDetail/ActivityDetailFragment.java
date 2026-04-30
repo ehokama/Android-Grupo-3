@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -18,11 +19,16 @@ import androidx.navigation.Navigation;
 
 import com.bumptech.glide.Glide;
 import com.rutea.app.R;
+import com.rutea.app.activitiesandviews.data.local.TokenManager;
+import com.rutea.app.activitiesandviews.data.local.db.CachedFavorite;
+import com.rutea.app.activitiesandviews.data.local.db.CachedFavoriteDao;
 import com.rutea.app.activitiesandviews.data.network.ActivityApiService;
 import com.rutea.app.activitiesandviews.data.models.dto.activity.ActivityDto;
 import com.rutea.app.activitiesandviews.data.models.dto.activity.ImageDto;
 
 import java.util.List;
+
+import java.util.concurrent.Executors;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -40,7 +46,15 @@ public class ActivityDetailFragment extends Fragment {
     @Inject
     ActivityApiService activityApiService;
 
-    // Store meetingPoint text to use in button click
+    @Inject
+    CachedFavoriteDao cachedFavoriteDao;
+
+    @Inject
+    TokenManager tokenManager;
+
+    private ImageButton btnFavorite;
+    private boolean isFavorite = false;
+    private ActivityDto loadedActivity;
     private String meetingPointText = null;
 
     @Nullable
@@ -63,6 +77,7 @@ public class ActivityDetailFragment extends Fragment {
         TextView tvCosto = view.findViewById(R.id.tvCosto);
         TextView tvGuia = view.findViewById(R.id.tvGuia);
         TextView tvEmpresa = view.findViewById(R.id.tvEmpresa);
+        btnFavorite = view.findViewById(R.id.btnFavorite);
         TextView tvIdioma = view.findViewById(R.id.tvIdioma);
         TextView tvInclusions = view.findViewById(R.id.tvInclusions);
         TextView tvCancellation = view.findViewById(R.id.tvCancellation);
@@ -89,18 +104,29 @@ public class ActivityDetailFragment extends Fragment {
         tvCancellation.setText("📋 Cancelación: -");
         btnMeetingPoint.setVisibility(View.GONE);
 
+        // Verificar estado de favorito en Room
         if (selectedActivityId > 0) {
+            String email = tokenManager.getEmail();
+            Executors.newSingleThreadExecutor().execute(() -> {
+                isFavorite = cachedFavoriteDao.isFavorite(selectedActivityId, email) > 0;
+                if (isAdded()) {
+                    requireActivity().runOnUiThread(() ->
+                            btnFavorite.setImageResource(isFavorite
+                                    ? R.drawable.ic_favorite_filled
+                                    : R.drawable.ic_favorite_border));
+                }
+            });
+
             activityApiService.getActivityById(selectedActivityId).enqueue(new Callback<ActivityDto>() {
                 @Override
                 public void onResponse(@NonNull Call<ActivityDto> call, @NonNull Response<ActivityDto> response) {
-                    if (!isAdded()) {
-                        return;
-                    }
+                    if (!isAdded()) return;
                     ActivityDto dto = response.body();
                     if (!response.isSuccessful() || dto == null) {
                         Toast.makeText(requireContext(), "No se pudo cargar el detalle.", Toast.LENGTH_SHORT).show();
                         return;
                     }
+                    loadedActivity = dto;
 
                     tvNombre.setText(valueOrDefault(dto.getTitle(), selectedFallbackName));
                     tvDescripcion.setText(valueOrDefault(dto.getDescription(), "Sin descripción"));
@@ -135,13 +161,13 @@ public class ActivityDetailFragment extends Fragment {
 
                 @Override
                 public void onFailure(@NonNull Call<ActivityDto> call, @NonNull Throwable throwable) {
-                    if (!isAdded()) {
-                        return;
-                    }
+                    if (!isAdded()) return;
                     Toast.makeText(requireContext(), "Error de red al cargar detalle.", Toast.LENGTH_SHORT).show();
                 }
             });
         }
+
+        btnFavorite.setOnClickListener(v -> toggleFavorite(selectedActivityId));
 
         // Meeting point: abre Google Maps buscando la dirección
         btnMeetingPoint.setOnClickListener(v -> {
@@ -152,7 +178,6 @@ public class ActivityDetailFragment extends Fragment {
                 if (mapIntent.resolveActivity(requireContext().getPackageManager()) != null) {
                     startActivity(mapIntent);
                 } else {
-                    // Fallback: open in browser
                     Intent browserIntent = new Intent(Intent.ACTION_VIEW,
                             Uri.parse("https://www.google.com/maps/search/?api=1&query=" + Uri.encode(meetingPointText)));
                     startActivity(browserIntent);
@@ -170,6 +195,39 @@ public class ActivityDetailFragment extends Fragment {
             Navigation.findNavController(view)
                     .navigate(R.id.action_detail_to_reservation, args);
         });
+    }
+
+    private void toggleFavorite(long activityId) {
+        if (activityId <= 0) return;
+        String email = tokenManager.getEmail();
+
+        if (isFavorite) {
+            isFavorite = false;
+            btnFavorite.setImageResource(R.drawable.ic_favorite_border);
+            Executors.newSingleThreadExecutor().execute(() ->
+                    cachedFavoriteDao.delete(activityId, email));
+        } else {
+            isFavorite = true;
+            btnFavorite.setImageResource(R.drawable.ic_favorite_filled);
+            Executors.newSingleThreadExecutor().execute(() -> {
+                String imageUrl = "";
+                if (loadedActivity != null && loadedActivity.getImages() != null
+                        && !loadedActivity.getImages().isEmpty()) {
+                    Long imgId = loadedActivity.getImages().get(0).getIdImage();
+                    imageUrl = "http://10.0.2.2:8080/api/images/" + imgId + "/raw";
+                }
+                CachedFavorite fav = new CachedFavorite(
+                        activityId, email,
+                        loadedActivity != null ? loadedActivity.getTitle() : null,
+                        loadedActivity != null ? loadedActivity.getPrice() : null,
+                        loadedActivity != null ? loadedActivity.getRating() : null,
+                        loadedActivity != null ? loadedActivity.getCategory() : null,
+                        loadedActivity != null ? loadedActivity.getUbicationName() : null,
+                        imageUrl
+                );
+                cachedFavoriteDao.insert(fav);
+            });
+        }
     }
 
     private String valueOrDefault(String value, String defaultValue) {

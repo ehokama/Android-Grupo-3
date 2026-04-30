@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -16,11 +17,17 @@ import androidx.navigation.Navigation;
 
 import com.bumptech.glide.Glide;
 import com.rutea.app.R;
+import com.rutea.app.activitiesandviews.data.local.TokenManager;
+import com.rutea.app.activitiesandviews.data.local.db.CachedFavorite;
+import com.rutea.app.activitiesandviews.data.local.db.CachedFavoriteDao;
 import com.rutea.app.activitiesandviews.data.network.ActivityApiService;
 import com.rutea.app.activitiesandviews.data.models.dto.activity.ActivityDto;
 import com.rutea.app.activitiesandviews.data.models.dto.common.PageResponse;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Executors;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -35,6 +42,15 @@ public class HomeFragment extends Fragment {
     @Inject
     ActivityApiService activityApiService;
 
+    @Inject
+    CachedFavoriteDao cachedFavoriteDao;
+
+    @Inject
+    TokenManager tokenManager;
+
+    // IDs de actividades favoritas del usuario (cargado al inicio)
+    private final Set<Long> favoriteIds = new HashSet<>();
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -47,14 +63,24 @@ public class HomeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Saludo
         String username = getArguments() != null ? getArguments().getString("username", "") : "";
         TextView tvGreeting = view.findViewById(R.id.tvGreeting);
         if (!username.isEmpty()) tvGreeting.setText("Hola, " + username + " 👋");
 
-        loadMostVisited(view);
-        loadRecommended(view);
-        loadTopRated(view);
+        // Cargar favoritos del usuario primero y luego renderizar las secciones
+        String email = tokenManager.getEmail();
+        Executors.newSingleThreadExecutor().execute(() -> {
+            List<CachedFavorite> favs = cachedFavoriteDao.getByEmail(email);
+            favoriteIds.clear();
+            for (CachedFavorite f : favs) favoriteIds.add(f.activityId);
+
+            if (!isAdded()) return;
+            requireActivity().runOnUiThread(() -> {
+                loadMostVisited(view);
+                loadRecommended(view);
+                loadTopRated(view);
+            });
+        });
     }
 
     private void loadMostVisited(View root) {
@@ -62,9 +88,7 @@ public class HomeFragment extends Fragment {
             @Override
             public void onResponse(@NonNull Call<List<ActivityDto>> call,
                                    @NonNull Response<List<ActivityDto>> response) {
-
                 if (!isAdded()) return;
-
                 if (response.isSuccessful() && response.body() != null) {
                     renderCards(root, R.id.llMostVisited, response.body());
                 } else {
@@ -79,14 +103,13 @@ public class HomeFragment extends Fragment {
             }
         });
     }
+
     private void loadRecommended(View root) {
         activityApiService.getRecommendations().enqueue(new Callback<List<ActivityDto>>() {
             @Override
             public void onResponse(@NonNull Call<List<ActivityDto>> call,
                                    @NonNull Response<List<ActivityDto>> response) {
-
                 if (!isAdded()) return;
-
                 if (response.isSuccessful() && response.body() != null) {
                     renderCards(root, R.id.llRecomendadas, response.body());
                 } else {
@@ -101,14 +124,13 @@ public class HomeFragment extends Fragment {
             }
         });
     }
+
     private void loadTopRated(View root) {
         activityApiService.getTopRated().enqueue(new Callback<List<ActivityDto>>() {
             @Override
             public void onResponse(@NonNull Call<List<ActivityDto>> call,
                                    @NonNull Response<List<ActivityDto>> response) {
-
                 if (!isAdded()) return;
-
                 if (response.isSuccessful() && response.body() != null) {
                     renderCards(root, R.id.llTopRated, response.body());
                 } else {
@@ -123,6 +145,7 @@ public class HomeFragment extends Fragment {
             }
         });
     }
+
     private void renderCards(View root, int containerId, List<ActivityDto> activities) {
         LinearLayout container = root.findViewById(containerId);
         LayoutInflater inflater = LayoutInflater.from(getContext());
@@ -136,24 +159,31 @@ public class HomeFragment extends Fragment {
             params.setMarginEnd(dpToPx(12));
             card.setLayoutParams(params);
 
-            String title = activity.getTitle() == null || activity.getTitle().isEmpty() ? "Actividad" : activity.getTitle();
+            String title = activity.getTitle() == null || activity.getTitle().isEmpty()
+                    ? "Actividad" : activity.getTitle();
             ((TextView) card.findViewById(R.id.tvCardLabel)).setText(title);
-            ImageView imageView = card.findViewById(R.id.ivCard);
 
+            ImageView imageView = card.findViewById(R.id.ivCard);
+            String imageUrl = "";
             if (activity.getImages() != null && !activity.getImages().isEmpty()) {
                 Long imageId = activity.getImages().get(0).getIdImage();
-
-                String imageUrl = "http://10.0.2.2:8080/api/images/" + imageId + "/raw";
-
+                imageUrl = "http://10.0.2.2:8080/api/images/" + imageId + "/raw";
                 Glide.with(requireContext())
                         .load(imageUrl)
                         .placeholder(R.drawable.bg_hero_landscape)
                         .error(R.drawable.bg_hero_landscape)
                         .into(imageView);
-
             } else {
                 imageView.setImageResource(R.drawable.bg_hero_landscape);
             }
+
+            // Corazón de favorito
+            ImageButton btnFav = card.findViewById(R.id.btnFavorite);
+            boolean isFav = activity.getId() != null && favoriteIds.contains(activity.getId());
+            btnFav.setImageResource(isFav ? R.drawable.ic_favorite_filled : R.drawable.ic_favorite_border);
+
+            final String finalImageUrl = imageUrl;
+            btnFav.setOnClickListener(v -> toggleFavorite(activity, btnFav, finalImageUrl));
 
             card.setOnClickListener(v -> {
                 Bundle args = new Bundle();
@@ -164,6 +194,35 @@ public class HomeFragment extends Fragment {
             });
 
             container.addView(card);
+        }
+    }
+
+    private void toggleFavorite(ActivityDto activity, ImageButton btnFav, String imageUrl) {
+        if (activity.getId() == null) return;
+        long id = activity.getId();
+        String email = tokenManager.getEmail();
+        boolean isFav = favoriteIds.contains(id);
+
+        if (isFav) {
+            favoriteIds.remove(id);
+            btnFav.setImageResource(R.drawable.ic_favorite_border);
+            Executors.newSingleThreadExecutor().execute(() ->
+                    cachedFavoriteDao.delete(id, email));
+        } else {
+            favoriteIds.add(id);
+            btnFav.setImageResource(R.drawable.ic_favorite_filled);
+            Executors.newSingleThreadExecutor().execute(() -> {
+                CachedFavorite fav = new CachedFavorite(
+                        id, email,
+                        activity.getTitle(),
+                        activity.getPrice(),
+                        activity.getRating(),
+                        activity.getCategory(),
+                        activity.getUbicationName(),
+                        imageUrl
+                );
+                cachedFavoriteDao.insert(fav);
+            });
         }
     }
 

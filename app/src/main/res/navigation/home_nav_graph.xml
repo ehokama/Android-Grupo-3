@@ -88,4 +88,14 @@
             app:popUpToInclusive="true" />
     </fragment>
 
+    <fragment
+        android:id="@+id/favoritesFragment"
+        android:name="com.rutea.app.activitiesandviews.ui.favorites.FavoritesFragment"
+        android:label="Mis Favoritos"
+        tools:layout="@layout/fragment_favorites">
+        <action
+            android:id="@+id/action_favorites_to_detail"
+            app:destination="@id/activityDetailFragment" />
+    </fragment>
+
 </navigation>

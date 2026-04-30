@@ -36,6 +36,17 @@
             android:textSize="14sp"
             android:textStyle="bold" />
 
+        <ImageButton
+            android:id="@+id/btnFavorite"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="6dp"
+            android:background="#55000000"
+            android:padding="4dp"
+            android:src="@drawable/ic_favorite_border"
+            android:contentDescription="Guardar en favoritos" />
+
     </FrameLayout>
 
 </androidx.cardview.widget.CardView>
