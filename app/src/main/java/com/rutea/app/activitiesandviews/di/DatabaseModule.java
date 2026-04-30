@@ -6,6 +6,7 @@ import androidx.room.Room;
 
 import com.rutea.app.activitiesandviews.data.local.db.AppDatabase;
 import com.rutea.app.activitiesandviews.data.local.db.CachedProfileDao;
+import com.rutea.app.activitiesandviews.data.local.db.CachedFavoriteDao;
 import com.rutea.app.activitiesandviews.data.local.db.CachedReserveDao;
 
 import javax.inject.Singleton;
@@ -36,5 +37,10 @@ public class DatabaseModule {
     @Provides
     public CachedReserveDao provideReserveDao(AppDatabase db) {
         return db.cachedReserveDao();
+    }
+
+    @Provides
+    public CachedFavoriteDao provideFavoriteDao(AppDatabase db) {
+        return db.cachedFavoriteDao();
     }
 }

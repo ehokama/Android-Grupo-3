@@ -72,7 +72,8 @@ public class MainActivity extends AppCompatActivity {
 
                 if (id == R.id.homeFragment ||
                         id == R.id.profileFragment ||
-                        id == R.id.myActivitiesFragment) {
+                        id == R.id.myActivitiesFragment ||
+                        id == R.id.favoritesFragment) {
 
                     bottomNavigationView.setVisibility(View.VISIBLE);
                 } else {
