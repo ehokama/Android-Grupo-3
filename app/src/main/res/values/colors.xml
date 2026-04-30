@@ -6,4 +6,6 @@
     <color name="state_confirmed">#1565C0</color>
     <color name="state_pending">#E65100</color>
     <color name="state_cancelled">#B71C1C</color>
+    <color name="star_yellow">#FFC107</color>
+    <color name="star_grey">#BDBDBD</color>
 </resources>

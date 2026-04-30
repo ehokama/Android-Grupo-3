@@ -30,6 +30,37 @@ public class ReserveDto {
     private Integer myGuideRating;
     private String myComment;
 
+    private String guideName;
+
+
+    private String city;
+
+    private Integer duration;
+
+    public Integer getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Integer duration) {
+        this.duration = duration;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public String getGuideName() {
+        return guideName;
+    }
+
+    public void setGuideName(String guideName) {
+        this.guideName = guideName;
+    }
+
     @SerializedName("country")
     private String country;
 

@@ -13,6 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -197,12 +199,17 @@ public class HistoryFragment extends Fragment {
 
     private void showReserves(List<ReserveDto> reserves) {
         applyRatingState(reserves);
-        adapter = new HistoryAdapter(reserves, this::onCancelClicked, this::onRateClicked);
+        adapter = new HistoryAdapter(reserves, this::onCancelClicked, this::onRateClicked, this::openDetail);
         rvHistory.setAdapter(adapter);
         tvStateHistory.setVisibility(View.GONE);
         rvHistory.setVisibility(View.VISIBLE);
     }
 
+    private void openDetail(ReserveDto reserve) {
+        Bundle args = ReserveDetailFragment.buildArgs(reserve);
+        NavController nav = Navigation.findNavController(requireView());
+        nav.navigate(R.id.action_historyFragment_to_reserveDetailFragment, args);
+    }
     private void applyRatingState(List<ReserveDto> reserves) {
         LocalDateTime now = LocalDateTime.now();
         for (ReserveDto reserve : reserves) {
