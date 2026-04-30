@@ -1,41 +1,130 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="160dp"
-    android:layout_height="120dp"
+    android:layout_width="180dp"
+    android:layout_height="220dp"
     android:layout_marginEnd="12dp"
     app:cardCornerRadius="16dp"
-    app:cardElevation="4dp">
+    app:cardElevation="4dp"
+    app:strokeWidth="0dp">
 
-    <FrameLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <ImageView
-            android:id="@+id/ivCard"
+        <!-- Imagen -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="120dp">
+
+            <ImageView
+                android:id="@+id/ivCard"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="Actividad"
+                android:scaleType="centerCrop"
+                android:src="@drawable/bg_hero_landscape" />
+
+            <!-- Chip categoría -->
+            <TextView
+                android:id="@+id/tvCardCategory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:background="@drawable/bg_chip_category"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="3dp"
+                android:text="Categoría"
+                android:textColor="#FFFFFF"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+
+        </FrameLayout>
+
+        <!-- Info -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:contentDescription="Destino"
-            android:scaleType="centerCrop"
-            android:src="@drawable/card_example" />
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="80dp"
-            android:layout_gravity="bottom"
-            android:background="@drawable/gradient_bottom" />
-
-        <TextView
-            android:id="@+id/tvCardLabel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
+            android:orientation="vertical"
             android:padding="10dp"
-            android:text="Nombre"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:background="#FFFFFF">
 
+            <TextView
+                android:id="@+id/tvCardLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Nombre actividad"
+                android:textColor="#212121"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:maxLines="2"
+                android:ellipsize="end" />
+
+            <!-- Destino -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="4dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📍"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/tvCardDestino"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="2dp"
+                    android:text="Destino"
+                    android:textColor="#757575"
+                    android:textSize="11sp"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+            </LinearLayout>
+
+            <!-- Duración y Precio -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="6dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🕐"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/tvCardDuration"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="2dp"
+                    android:text="- hs"
+                    android:textColor="#757575"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/tvCardPrice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="$-"
+                    android:textColor="#1976D2"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </LinearLayout>
         <ImageButton
             android:id="@+id/btnFavorite"
             android:layout_width="32dp"
@@ -49,4 +138,4 @@
 
     </FrameLayout>
 
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>

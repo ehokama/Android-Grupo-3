@@ -11,6 +11,7 @@ import com.rutea.app.activitiesandviews.data.network.ReserveApiService;
 import com.rutea.app.activitiesandviews.data.network.ReviewApiService;
 import com.rutea.app.activitiesandviews.data.network.TravellerApiService;
 import com.rutea.app.activitiesandviews.data.local.TokenManager;
+import com.rutea.app.activitiesandviews.data.network.UbicationApiService;
 
 import javax.inject.Singleton;
 
@@ -128,5 +129,11 @@ public class NetworkModule {
     @Singleton
     public TravellerApiService provideTravellerApiService(Retrofit retrofit) {
         return retrofit.create(TravellerApiService.class);
+    }
+
+    @Provides
+    @Singleton
+    public UbicationApiService provideUbicationApiService(Retrofit retrofit) {
+        return retrofit.create(UbicationApiService.class);
     }
 }

@@ -35,7 +35,7 @@ import retrofit2.Response;
 
 import dagger.hilt.android.AndroidEntryPoint;
 import javax.inject.Inject;
-
+import java.util.Locale;
 @AndroidEntryPoint
 public class HomeFragment extends Fragment {
 
@@ -63,6 +63,12 @@ public class HomeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        view.findViewById(R.id.etSearch).setOnClickListener(v ->
+                Navigation.findNavController(requireActivity(), R.id.nav_host_fragment)
+                        .navigate(R.id.action_home_to_search)
+        );
+
+        // Saludo
         String username = getArguments() != null ? getArguments().getString("username", "") : "";
         TextView tvGreeting = view.findViewById(R.id.tvGreeting);
         if (!username.isEmpty()) tvGreeting.setText("Hola, " + username + " 👋");
@@ -154,6 +160,7 @@ public class HomeFragment extends Fragment {
         for (ActivityDto activity : activities) {
             View card = inflater.inflate(R.layout.item_category_card, container, false);
 
+            // Título
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     dpToPx(160), dpToPx(120));
             params.setMarginEnd(dpToPx(12));
@@ -163,6 +170,35 @@ public class HomeFragment extends Fragment {
                     ? "Actividad" : activity.getTitle();
             ((TextView) card.findViewById(R.id.tvCardLabel)).setText(title);
 
+            // Categoría
+            TextView tvCategory = card.findViewById(R.id.tvCardCategory);
+            if (activity.getCategory() != null && !activity.getCategory().isEmpty()) {
+                tvCategory.setText(activity.getCategory());
+                tvCategory.setVisibility(View.VISIBLE);
+            } else {
+                tvCategory.setVisibility(View.GONE);
+            }
+
+            // Destino
+            TextView tvDestino = card.findViewById(R.id.tvCardDestino);
+            tvDestino.setText(activity.getUbicationName() != null
+                    ? activity.getUbicationName() : "—");
+
+            // Duración
+            TextView tvDuration = card.findViewById(R.id.tvCardDuration);
+            tvDuration.setText(activity.getDuration() != null
+                    ? activity.getDuration() + " hs" : "—");
+
+            // Precio
+            TextView tvPrice = card.findViewById(R.id.tvCardPrice);
+            tvPrice.setText(activity.getPrice() != null
+                    ? String.format(Locale.getDefault(), "$%.0f", activity.getPrice()) : "Gratis");
+
+            // Imagen
+            ImageView imageView = card.findViewById(R.id.ivCard);
+            if (activity.getImages() != null && !activity.getImages().isEmpty()) {
+                Long imageId = activity.getImages().get(0).getIdImage();
+                String imageUrl = "http://10.0.2.2:8080/api/images/" + imageId + "/raw";
             ImageView imageView = card.findViewById(R.id.ivCard);
             String imageUrl = "";
             if (activity.getImages() != null && !activity.getImages().isEmpty()) {
@@ -177,6 +213,7 @@ public class HomeFragment extends Fragment {
                 imageView.setImageResource(R.drawable.bg_hero_landscape);
             }
 
+            // Click → detalle
             // Corazón de favorito
             ImageButton btnFav = card.findViewById(R.id.btnFavorite);
             boolean isFav = activity.getId() != null && favoriteIds.contains(activity.getId());
