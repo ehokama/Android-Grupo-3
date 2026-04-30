@@ -129,7 +129,9 @@ public class LoginFragment extends Fragment {
                     .setTitle("Sin seguridad configurada")
                     .setMessage("Tu dispositivo no tiene huella, PIN ni patrón configurados. ¿Querés configurarlos ahora para poder usar el acceso biométrico?")
                     .setPositiveButton("Ir a Ajustes", (dialog, which) -> {
-                        startActivity(new Intent(Settings.ACTION_SECURITY_SETTINGS));
+                        if (isAdded() && getActivity() != null) {
+                            getActivity().startActivity(new Intent(Settings.ACTION_SECURITY_SETTINGS));
+                        }
                         showCredentialForm();
                     })
                     .setNegativeButton("No, gracias", (dialog, which) -> showCredentialForm())
