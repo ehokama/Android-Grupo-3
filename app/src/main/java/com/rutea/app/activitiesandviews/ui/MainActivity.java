@@ -71,8 +71,7 @@ public class MainActivity extends AppCompatActivity {
                 int id = destination.getId();
 
                 if (id == R.id.homeFragment ||
-                        id == R.id.profileFragment ||
-                        id == R.id.myActivitiesFragment) {
+                        id == R.id.profileFragment) {
 
                     bottomNavigationView.setVisibility(View.VISIBLE);
                 } else {

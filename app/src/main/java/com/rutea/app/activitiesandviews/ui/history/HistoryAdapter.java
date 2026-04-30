@@ -28,11 +28,14 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.VH> {
     private final List<ReserveDto> items;
     private final Consumer<Long> onCancelClick;
     private final Consumer<ReserveDto> onRateClick;
+    private final Consumer<ReserveDto> onItemClick;
 
-    public HistoryAdapter(List<ReserveDto> items, Consumer<Long> onCancelClick, Consumer<ReserveDto> onRateClick) {
+    public HistoryAdapter(List<ReserveDto> items, Consumer<Long> onCancelClick,
+                          Consumer<ReserveDto> onRateClick, Consumer<ReserveDto> onItemClick) {
         this.items = items;
         this.onCancelClick = onCancelClick;
         this.onRateClick = onRateClick;
+        this.onItemClick   = onItemClick;
     }
 
     @NonNull
@@ -53,7 +56,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.VH> {
 
     class VH extends RecyclerView.ViewHolder {
         ImageView ivActivityImage;
-        TextView tvTitle, tvDate, tvPeople, tvPrice, tvReserveId, tvActivityDate;
+        TextView tvTitle, tvDate, tvPeople, tvPrice, tvReserveId, tvActivityDate, tvDestino, tvDuration;
         Chip chipState;
         Button btnCancel, btnRate;
         TextView tvReviewSummary;
@@ -71,15 +74,19 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.VH> {
             btnCancel       = v.findViewById(R.id.btnCancel);
             btnRate         = v.findViewById(R.id.btnRate);
             tvReviewSummary = v.findViewById(R.id.tvReviewSummary);
+            tvDestino = v.findViewById(R.id.tvDestino);
+            tvDuration = v.findViewById(R.id.tvDuration);
         }
 
         void bind(ReserveDto r) {
             tvTitle.setText(r.getActivityTitle() != null ? r.getActivityTitle() : "Actividad");
             tvReserveId.setText("Reserva #" + r.getIdReserve());
-            tvDate.setText("Creada: " + formatDate(r.getCreationDate()));
+            tvDate.setText("Guía: " + r.getGuideName());
             tvActivityDate.setText("Fecha actividad: " + formatDate(r.getReservationDate()));
             tvPeople.setText(r.getNumberOfPeople() + (r.getNumberOfPeople() == 1 ? " persona" : " personas"));
             tvPrice.setText(String.format(Locale.getDefault(), "$%.2f", r.getTotalPrice() != null ? r.getTotalPrice() : 0.0));
+            tvDestino.setText("Destino: "+ r.getCountry()+", "+r.getCity());
+            tvDuration.setText("Duración: " + r.getDuration() + " minutos.");
 
             // ─── Estado chip ───
             bindStateChip(r.getState());
@@ -105,11 +112,15 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.VH> {
                 }
                 tvReviewSummary.setText(summary);
                 tvReviewSummary.setVisibility(View.VISIBLE);
-            } else if ("COMPLETED".equals(state) && !r.isCanRate() && !r.isAlreadyRated()) {
-                tvReviewSummary.setText("Ventana de calificación cerrada (48h).");
+            } else if ("COMPLETED".equals(state)) {
+                tvReviewSummary.setText("Ya puedes dejar una reseña");
+                tvReviewSummary.setVisibility(View.VISIBLE);
+            } else if ("CANCELLED".equals(state)) {
+                tvReviewSummary.setText("No podrás dejar reseña. \uD83D\uDE22");
                 tvReviewSummary.setVisibility(View.VISIBLE);
             } else {
-                tvReviewSummary.setVisibility(View.GONE);
+                tvReviewSummary.setText("La opción para dejar una reseña estará disponible dentro de las 48 horas posteriores a la finalización de la actividad.");
+                tvReviewSummary.setVisibility(View.VISIBLE);
             }
 
 // ─── Imagen desde lista de imágenes de la actividad ───
@@ -125,6 +136,11 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.VH> {
             } else {
                 ivActivityImage.setImageResource(R.drawable.bg_hero_landscape);
             }
+
+            itemView.setOnClickListener(v -> {
+                if (onItemClick != null) onItemClick.accept(r);
+            });
+
         }
 
         private void bindStateChip(String state) {
