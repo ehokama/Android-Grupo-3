@@ -18,8 +18,12 @@ import com.rutea.app.activitiesandviews.data.local.TokenManager;
 import com.rutea.app.activitiesandviews.data.local.db.AppDatabase;
 import com.rutea.app.activitiesandviews.data.local.db.CachedProfile;
 import com.rutea.app.activitiesandviews.data.local.db.CachedProfileDao;
+import com.rutea.app.activitiesandviews.data.models.dto.auth.AuthResponse;
+import com.rutea.app.activitiesandviews.data.models.dto.auth.ChangeEmailRequest;
+import com.rutea.app.activitiesandviews.data.models.dto.auth.ChangePasswordRequest;
 import com.rutea.app.activitiesandviews.data.models.dto.traveller.TravellerDto;
 import com.rutea.app.activitiesandviews.data.network.ActivityApiService;
+import com.rutea.app.activitiesandviews.data.network.AuthApiService;
 import com.rutea.app.activitiesandviews.data.network.TravellerApiService;
 
 import java.util.ArrayList;
@@ -35,6 +39,7 @@ public class EditProfileFragment extends Fragment {
 
     @Inject TravellerApiService travellerApiService;
     @Inject ActivityApiService activityApiService;
+    @Inject AuthApiService authApiService;
     @Inject
     TokenManager tokenManager;
 
@@ -43,6 +48,7 @@ public class EditProfileFragment extends Fragment {
     AppDatabase appDatabase;
 
     private EditText etEditName, etEditPhone, etEditEmail;
+    private EditText etCurrentPassword, etNewPassword, etConfirmNewPassword;
     private ChipGroup cgEditPreferencias;
     private String originalEmail; // email antes de editar
 
@@ -55,6 +61,9 @@ public class EditProfileFragment extends Fragment {
         etEditName  = view.findViewById(R.id.etEditName);
         etEditEmail = view.findViewById(R.id.etEditEmail);
         etEditPhone = view.findViewById(R.id.etEditPhone);
+        etCurrentPassword = view.findViewById(R.id.etCurrentPassword);
+        etNewPassword = view.findViewById(R.id.etNewPassword);
+        etConfirmNewPassword = view.findViewById(R.id.etConfirmNewPassword);
         cgEditPreferencias = view.findViewById(R.id.cgEditPreferencias);
 
         loadCategoriesAndProfile();
@@ -118,11 +127,34 @@ public class EditProfileFragment extends Fragment {
         String newName  = etEditName.getText().toString().trim();
         String newPhone = etEditPhone.getText().toString().trim();
         String newEmail = etEditEmail.getText().toString().trim();
+        String currentPassword = etCurrentPassword.getText().toString();
+        String newPassword = etNewPassword.getText().toString();
+        String confirmPassword = etConfirmNewPassword.getText().toString();
 
         List<String> preferences = new ArrayList<>();
         for (int i = 0; i < cgEditPreferencias.getChildCount(); i++) {
             Chip chip = (Chip) cgEditPreferencias.getChildAt(i);
             if (chip.isChecked()) preferences.add(chip.getText().toString());
+        }
+
+        boolean emailChanged = originalEmail != null && !newEmail.equalsIgnoreCase(originalEmail);
+        boolean wantsPasswordChange = !newPassword.isBlank() || !confirmPassword.isBlank();
+
+        if (emailChanged || wantsPasswordChange) {
+            if (currentPassword.isBlank()) {
+                Toast.makeText(requireContext(), "Para cambiar mail o contraseña ingresá tu contraseña actual.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+        if (wantsPasswordChange) {
+            if (newPassword.length() < 6) {
+                Toast.makeText(requireContext(), "La nueva contraseña debe tener al menos 6 caracteres.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (!newPassword.equals(confirmPassword)) {
+                Toast.makeText(requireContext(), "La confirmación de contraseña no coincide.", Toast.LENGTH_SHORT).show();
+                return;
+            }
         }
 
         TravellerDto request = new TravellerDto(newName, newEmail, newPhone, preferences);
@@ -132,36 +164,20 @@ public class EditProfileFragment extends Fragment {
             public void onResponse(@NonNull Call<TravellerDto> call, @NonNull Response<TravellerDto> response) {
                 if (!isAdded()) return;
 
-                if (response.isSuccessful()) {
-                    boolean emailChanged = !newEmail.equals(originalEmail);
+                if (!response.isSuccessful()) {
+                    Toast.makeText(getContext(), "Error al guardar perfil", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
-                    if (emailChanged) {
-                        // 1. Actualizar email en TokenManager
-                        String currentToken = tokenManager.getToken();
-                        tokenManager.saveSession(currentToken, newEmail, newName);
-
-                        // 2. Migrar CachedProfile: borrar viejo (PK viejo) e insertar con nuevo email
-                        new Thread(() -> {
-                            CachedProfileDao dao = appDatabase.cachedProfileDao();
-                            //                            // Borramos el registro anterior por email viejo
-                            //                            // Room no tiene delete by field sin @Query, así que reemplazamos
-                            //                            // Si tenés @Delete o @Query("DELETE...") usalo; si no, REPLACE alcanza
-                            //                            // porque el nuevo email es distinto y el viejo queda huérfano.
-                            //                            // Lo más limpio: agregar este método al DAO (ver abajo).
-                            dao.deleteByEmail(originalEmail);
-                            dao.insertProfile(new CachedProfile(
-                                    newEmail, newName, newPhone,
-                                    String.join(",", preferences)
-                            ));
-                        }).start();
-
-                        originalEmail = newEmail;
-                    }
-
+                if (emailChanged) {
+                    runEmailChangeFlow(view, currentPassword, newEmail, newName, newPhone, preferences, wantsPasswordChange ? newPassword : null);
+                } else if (wantsPasswordChange) {
+                    migrateCachedProfile(originalEmail, newEmail, newName, newPhone, preferences);
+                    runPasswordChangeFlow(view, currentPassword, newPassword, "Perfil y contraseña actualizados.");
+                } else {
+                    migrateCachedProfile(originalEmail, newEmail, newName, newPhone, preferences);
                     Toast.makeText(requireContext(), "Perfil actualizado exitosamente", Toast.LENGTH_SHORT).show();
                     Navigation.findNavController(view).navigateUp();
-                } else {
-                    Toast.makeText(getContext(), "Error al guardar perfil", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -170,5 +186,87 @@ public class EditProfileFragment extends Fragment {
                 if (isAdded()) Toast.makeText(getContext(), "Error de red al guardar", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void runEmailChangeFlow(
+            View view,
+            String currentPassword,
+            String newEmail,
+            String newName,
+            String newPhone,
+            List<String> preferences,
+            String newPasswordIfAny
+    ) {
+        authApiService.changeEmail(new ChangeEmailRequest(currentPassword, newEmail))
+                .enqueue(new Callback<AuthResponse>() {
+                    @Override
+                    public void onResponse(@NonNull Call<AuthResponse> call, @NonNull Response<AuthResponse> response) {
+                        if (!isAdded()) return;
+                        if (!response.isSuccessful() || response.body() == null) {
+                            Toast.makeText(requireContext(), "No se pudo cambiar el mail. Verificá tu contraseña.", Toast.LENGTH_LONG).show();
+                            return;
+                        }
+
+                        AuthResponse auth = response.body();
+                        String token = auth.getToken() != null ? auth.getToken() : tokenManager.getToken();
+                        String name = auth.getName() != null ? auth.getName() : newName;
+                        String oldEmail = originalEmail;
+                        tokenManager.saveSession(token, newEmail, name);
+                        originalEmail = newEmail;
+                        migrateCachedProfile(oldEmail, newEmail, newName, newPhone, preferences);
+
+                        if (newPasswordIfAny != null) {
+                            runPasswordChangeFlow(view, currentPassword, newPasswordIfAny, "Perfil, mail y contraseña actualizados.");
+                        } else {
+                            Toast.makeText(requireContext(), "Perfil y mail actualizados.", Toast.LENGTH_SHORT).show();
+                            Navigation.findNavController(view).navigateUp();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<AuthResponse> call, @NonNull Throwable t) {
+                        if (isAdded()) {
+                            Toast.makeText(requireContext(), "Error de red al cambiar mail.", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+    }
+
+    private void runPasswordChangeFlow(View view, String currentPassword, String newPassword, String successMessage) {
+        authApiService.changePassword(new ChangePasswordRequest(currentPassword, newPassword))
+                .enqueue(new Callback<java.util.Map<String, String>>() {
+                    @Override
+                    public void onResponse(@NonNull Call<java.util.Map<String, String>> call, @NonNull Response<java.util.Map<String, String>> response) {
+                        if (!isAdded()) return;
+                        if (!response.isSuccessful()) {
+                            Toast.makeText(requireContext(), "No se pudo cambiar la contraseña. Verificá tu contraseña actual.", Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                        Toast.makeText(requireContext(), successMessage, Toast.LENGTH_SHORT).show();
+                        Navigation.findNavController(view).navigateUp();
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<java.util.Map<String, String>> call, @NonNull Throwable t) {
+                        if (isAdded()) {
+                            Toast.makeText(requireContext(), "Error de red al cambiar contraseña.", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+    }
+
+    private void migrateCachedProfile(String oldEmail, String newEmail, String name, String phone, List<String> preferences) {
+        new Thread(() -> {
+            CachedProfileDao dao = appDatabase.cachedProfileDao();
+            if (oldEmail != null && !oldEmail.equalsIgnoreCase(newEmail)) {
+                dao.deleteByEmail(oldEmail);
+            }
+            dao.insertProfile(new CachedProfile(
+                    newEmail,
+                    name,
+                    phone,
+                    String.join(",", preferences)
+            ));
+        }).start();
     }
 }

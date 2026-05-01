@@ -233,6 +233,11 @@ public class ProfileFragment extends Fragment {
                     .load(file)
                     .circleCrop()
                     .into(ivProfile);
+        } else {
+            Glide.with(this)
+                    .load(R.drawable.ic_launcher_foreground)
+                    .circleCrop()
+                    .into(ivProfile);
         }
     }
 }
