@@ -20,9 +20,12 @@ import com.rutea.app.R;
 import com.rutea.app.activitiesandviews.data.local.TokenManager;
 import com.rutea.app.activitiesandviews.data.local.db.CachedFavorite;
 import com.rutea.app.activitiesandviews.data.local.db.CachedFavoriteDao;
+import com.rutea.app.activitiesandviews.data.models.dto.news.NewsDto;
 import com.rutea.app.activitiesandviews.data.network.ActivityApiService;
 import com.rutea.app.activitiesandviews.data.models.dto.activity.ActivityDto;
 import com.rutea.app.activitiesandviews.data.models.dto.common.PageResponse;
+import com.rutea.app.activitiesandviews.data.network.NewsApiService;
+import com.rutea.app.activitiesandviews.ui.news.NewsAdapter;
 
 import java.util.HashSet;
 import java.util.List;
@@ -41,6 +44,9 @@ public class HomeFragment extends Fragment {
 
     @Inject
     ActivityApiService activityApiService;
+
+    @Inject
+    NewsApiService newsApiService;
 
     @Inject
     CachedFavoriteDao cachedFavoriteDao;
@@ -68,6 +74,11 @@ public class HomeFragment extends Fragment {
                         .navigate(R.id.action_home_to_search)
         );
 
+        view.findViewById(R.id.tvVerTodasNews).setOnClickListener(v ->
+                Navigation.findNavController(requireActivity(), R.id.nav_host_fragment)
+                        .navigate(R.id.action_home_to_news)
+        );
+
         // Saludo
         String username = getArguments() != null ? getArguments().getString("username", "") : "";
         TextView tvGreeting = view.findViewById(R.id.tvGreeting);
@@ -85,6 +96,7 @@ public class HomeFragment extends Fragment {
                 loadMostVisited(view);
                 loadRecommended(view);
                 loadTopRated(view);
+                loadNews(view);
             });
         });
     }
@@ -196,10 +208,6 @@ public class HomeFragment extends Fragment {
 
             // Imagen
             ImageView imageView = card.findViewById(R.id.ivCard);
-            if (activity.getImages() != null && !activity.getImages().isEmpty()) {
-                Long imageId = activity.getImages().get(0).getIdImage();
-                String imageUrl = "http://10.0.2.2:8080/api/images/" + imageId + "/raw";
-            ImageView imageView = card.findViewById(R.id.ivCard);
             String imageUrl = "";
             if (activity.getImages() != null && !activity.getImages().isEmpty()) {
                 Long imageId = activity.getImages().get(0).getIdImage();
@@ -260,6 +268,70 @@ public class HomeFragment extends Fragment {
                 );
                 cachedFavoriteDao.insert(fav);
             });
+        }
+    }
+
+    private void loadNews(View root) {
+        newsApiService.getNews().enqueue(new Callback<List<NewsDto>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<NewsDto>> call,
+                                   @NonNull Response<List<NewsDto>> response) {
+                if (!isAdded()) return;
+                if (response.isSuccessful() && response.body() != null) {
+                    renderNewsCards(root, response.body());
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<List<NewsDto>> call, @NonNull Throwable t) { }
+        });
+    }
+
+    private void renderNewsCards(View root, List<NewsDto> newsList) {
+        LinearLayout container = root.findViewById(R.id.llNews);
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+        container.removeAllViews();
+
+        for (NewsDto news : newsList) {
+            View card = inflater.inflate(R.layout.item_news_card, container, false);
+
+            TextView tvTitle = card.findViewById(R.id.tvNewsCardTitle);
+            TextView tvDesc  = card.findViewById(R.id.tvNewsCardDesc);
+            TextView tvType  = card.findViewById(R.id.tvNewsCardType);
+            ImageView ivImage = card.findViewById(R.id.ivNewsCardImage);
+
+            tvTitle.setText(news.getTitle() != null ? news.getTitle() : "");
+            tvDesc.setText(news.getDescription() != null ? news.getDescription() : "");
+
+            String type = news.getType() != null ? news.getType() : "";
+            tvType.setText(type);
+            tvType.setBackgroundColor(NewsAdapter.typeColor(type));
+
+            String imageUrl = NewsAdapter.resolveImageUrl(news);
+            if (imageUrl != null && !imageUrl.isEmpty()) {
+                Glide.with(requireContext())
+                        .load(imageUrl)
+                        .placeholder(R.drawable.bg_hero_landscape)
+                        .error(R.drawable.bg_hero_landscape)
+                        .centerCrop()
+                        .into(ivImage);
+            }
+
+            card.setOnClickListener(v -> {
+                Bundle args = new Bundle();
+                args.putLong("newsId", news.getId() != null ? news.getId() : -1L);
+                args.putString("newsTitle", news.getTitle());
+                args.putString("newsDesc", news.getDescription());
+                args.putString("newsContent", news.getContent());
+                args.putString("newsType", news.getType());
+                args.putString("newsImageUrl", imageUrl);
+                args.putString("newsDiscount", news.getDiscount());
+                if (news.getActivityId() != null) args.putLong("activityId", news.getActivityId());
+                Navigation.findNavController(requireActivity(), R.id.nav_host_fragment)
+                        .navigate(R.id.action_home_to_news_detail, args);
+            });
+
+            container.addView(card);
         }
     }
 

@@ -24,6 +24,14 @@
         android:layout_marginBottom="16dp"/>
 
     <EditText
+        android:id="@+id/etEditEmail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Correo electrónico"
+        android:inputType="textEmailAddress"
+        android:layout_marginBottom="16dp"/>
+
+    <EditText
         android:id="@+id/etEditPhone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

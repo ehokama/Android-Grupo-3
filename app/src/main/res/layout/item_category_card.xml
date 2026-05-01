@@ -136,6 +136,4 @@
             android:src="@drawable/ic_favorite_border"
             android:contentDescription="Guardar en favoritos" />
 
-    </FrameLayout>
-
 </com.google.android.material.card.MaterialCardView>

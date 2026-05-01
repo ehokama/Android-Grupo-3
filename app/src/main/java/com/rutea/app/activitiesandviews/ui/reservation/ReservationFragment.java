@@ -16,7 +16,10 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
+import com.google.android.material.card.MaterialCardView;
 import com.rutea.app.R;
+import com.rutea.app.activitiesandviews.data.models.dto.activity.ActivityDto;
+import com.rutea.app.activitiesandviews.data.network.ActivityApiService;
 import com.rutea.app.activitiesandviews.data.network.DisponibilityApiService;
 import com.rutea.app.activitiesandviews.data.network.ReserveApiService;
 import com.rutea.app.activitiesandviews.data.network.ReserveRequestFactory;
@@ -50,12 +53,22 @@ public class ReservationFragment extends Fragment {
     private int personas = 1;
     private TextView tvPersonas;
     private final List<DisponibilityDto> selectedDisponibilities = new ArrayList<>();
+    private MaterialCardView cardPrecio;
+    private TextView tvPrecioBase;
+    private TextView tvDescuentoDetalle;
+    private TextView tvPrecioTotal;
+    private double activityPrice = -1;
+    private String discountMode;
+    private int discountPercent;
 
     @Inject
     ReserveApiService reserveApiService;
 
     @Inject
     DisponibilityApiService disponibilityApiService;
+
+    @Inject
+    ActivityApiService activityApiService;
 
     private Spinner spinnerHorario;
     private Spinner spinnerFecha;
@@ -83,8 +96,38 @@ public class ReservationFragment extends Fragment {
         if (getArguments() != null) {
             nombreActividad = getArguments().getString("nombre", "Actividad");
             activityId = getArguments().getLong("activityId", -1L);
+            activityPrice = getArguments().getDouble("activityPrice", -1);
+            discountMode = getArguments().getString("discountMode", null);
+            discountPercent = getArguments().getInt("discountPercent", 0);
         }
         ((TextView) view.findViewById(R.id.tvNombreActividad)).setText(nombreActividad);
+
+        cardPrecio = view.findViewById(R.id.cardPrecio);
+        tvPrecioBase = view.findViewById(R.id.tvPrecioBase);
+        tvDescuentoDetalle = view.findViewById(R.id.tvDescuentoDetalle);
+        tvPrecioTotal = view.findViewById(R.id.tvPrecioTotal);
+
+        if (activityPrice <= 0 && activityId > 0) {
+            activityApiService.getActivityById(activityId).enqueue(new Callback<ActivityDto>() {
+                @Override
+                public void onResponse(@NonNull Call<ActivityDto> call,
+                                       @NonNull Response<ActivityDto> response) {
+                    if (!isAdded() || !response.isSuccessful() || response.body() == null) return;
+                    ActivityDto dto = response.body();
+                    if (dto.getTitle() != null && ("Actividad".equals(nombreActividad) || nombreActividad.isEmpty())) {
+                        nombreActividad = dto.getTitle();
+                        ((TextView) view.findViewById(R.id.tvNombreActividad)).setText(nombreActividad);
+                    }
+                    if (dto.getPrice() != null && dto.getPrice() > 0) {
+                        activityPrice = dto.getPrice();
+                        updatePriceSummary();
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<ActivityDto> call, @NonNull Throwable t) { }
+            });
+        }
 
         // --- fecha ---
         spinnerFecha = view.findViewById(R.id.spinnerFecha);
@@ -105,11 +148,19 @@ public class ReservationFragment extends Fragment {
         // --- cupo personas ---
         tvPersonas = view.findViewById(R.id.tvPersonas);
         view.findViewById(R.id.btnMenos).setOnClickListener(v -> {
-            if (personas > 1) tvPersonas.setText(String.valueOf(--personas));
+            if (personas > 1) {
+                tvPersonas.setText(String.valueOf(--personas));
+                updatePriceSummary();
+            }
         });
         view.findViewById(R.id.btnMas).setOnClickListener(v -> {
-            if (personas < 20) tvPersonas.setText(String.valueOf(++personas));
+            if (personas < 20) {
+                tvPersonas.setText(String.valueOf(++personas));
+                updatePriceSummary();
+            }
         });
+
+        updatePriceSummary();
 
         // --- confirmacion ---
         btnConfirmar = view.findViewById(R.id.btnConfirmar);
@@ -289,5 +340,44 @@ public class ReservationFragment extends Fragment {
     private ArrayAdapter<String> simpleAdapter(List<String> items) {
         return new ArrayAdapter<>(requireContext(),
                 android.R.layout.simple_spinner_dropdown_item, items);
+    }
+
+    private void updatePriceSummary() {
+        if (activityPrice <= 0) {
+            cardPrecio.setVisibility(View.GONE);
+            return;
+        }
+
+        cardPrecio.setVisibility(View.VISIBLE);
+        double baseTotal = activityPrice * personas;
+        double discountAmount = 0.0;
+        String detail = null;
+
+        if (discountPercent > 0 && discountMode != null) {
+            if ("SECOND_PERSON".equalsIgnoreCase(discountMode) && personas >= 2) {
+                discountAmount = activityPrice * (discountPercent / 100.0);
+                detail = "2da persona: -" + formatCurrency(discountAmount)
+                        + " (" + discountPercent + "% desc.)";
+            } else if ("ALL".equalsIgnoreCase(discountMode)) {
+                discountAmount = baseTotal * (discountPercent / 100.0);
+                detail = "Descuento " + discountPercent + "%: -" + formatCurrency(discountAmount);
+            }
+        }
+
+        double total = Math.max(0.0, baseTotal - discountAmount);
+
+        tvPrecioBase.setText("Precio por persona: " + formatCurrency(activityPrice));
+        tvPrecioTotal.setText("Total: " + formatCurrency(total));
+
+        if (detail != null) {
+            tvDescuentoDetalle.setText(detail);
+            tvDescuentoDetalle.setVisibility(View.VISIBLE);
+        } else {
+            tvDescuentoDetalle.setVisibility(View.GONE);
+        }
+    }
+
+    private String formatCurrency(double value) {
+        return String.format(Locale.getDefault(), "$%.2f", value);
     }
 }
