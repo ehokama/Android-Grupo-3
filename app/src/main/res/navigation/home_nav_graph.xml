@@ -16,6 +16,12 @@
         <action
             android:id="@+id/action_home_to_search"
             app:destination="@id/searchFragment" />
+        <action
+            android:id="@+id/action_home_to_news"
+            app:destination="@id/newsFragment" />
+        <action
+            android:id="@+id/action_home_to_news_detail"
+            app:destination="@id/newsDetailFragment" />
     </fragment>
 
 
@@ -109,6 +115,29 @@
         <action
             android:id="@+id/action_favorites_to_detail"
             app:destination="@id/activityDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/newsFragment"
+        android:name="com.rutea.app.activitiesandviews.ui.news.NewsFragment"
+        android:label="Novedades"
+        tools:layout="@layout/fragment_news">
+        <action
+            android:id="@+id/action_news_to_news_detail"
+            app:destination="@id/newsDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/newsDetailFragment"
+        android:name="com.rutea.app.activitiesandviews.ui.news.NewsDetailFragment"
+        android:label="Detalle Novedad"
+        tools:layout="@layout/fragment_news_detail">
+        <action
+            android:id="@+id/action_news_detail_to_activity"
+            app:destination="@id/activityDetailFragment" />
+        <action
+            android:id="@+id/action_news_detail_to_reservation"
+            app:destination="@id/reservationFragment" />
     </fragment>
 
 </navigation>

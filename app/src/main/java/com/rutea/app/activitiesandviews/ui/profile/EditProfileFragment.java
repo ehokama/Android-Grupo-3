@@ -53,6 +53,7 @@ public class EditProfileFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         etEditName  = view.findViewById(R.id.etEditName);
+        etEditEmail = view.findViewById(R.id.etEditEmail);
         etEditPhone = view.findViewById(R.id.etEditPhone);
         cgEditPreferencias = view.findViewById(R.id.cgEditPreferencias);
 
