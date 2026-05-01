@@ -1,47 +1,96 @@
 # Android-Grupo-3
 
-## Conexion con backend_rutea (Retrofit)
+Aplicación Android nativa (Java) para gestión de actividades turísticas, integrada con `backend_rutea`.
 
-### Requisitos
-- Backend `backend_rutea` ejecutando en `http://localhost:8080`.
-- Emulador Android para usar `http://10.0.2.2:8080/`.
-- Permiso de internet y `usesCleartextTraffic` habilitado para entorno local.
+## Stack principal
 
-### URL base
-La URL base del cliente Retrofit se define en:
-- `app/src/main/java/com/rutea/app/activitiesandviews/ui/data/network/RetrofitClient.java`
+- Java + AndroidX
+- Navigation Component (single-activity + fragments)
+- Hilt (inyección de dependencias)
+- Retrofit + OkHttp + Gson
+- Room (caché offline)
+- EncryptedSharedPreferences (sesión/token)
+- Glide (imágenes)
 
-Configuraciones recomendadas:
-- Emulador: `http://10.0.2.2:8080/`
-- Dispositivo fisico: `http://<ip-local-pc>:8080/`
+## Requisitos
 
-### Estructura de red
-- `AuthApiService`: login/register/otp.
-- `ActivityApiService`: listado, featured, detalle por id.
-- `SessionManager`: persiste token JWT y datos de usuario.
-- `AuthInterceptor`: adjunta `Authorization: Bearer <token>` a requests.
+- Backend `backend_rutea` corriendo en `http://localhost:8080`.
+- Emulador Android (usa `http://10.0.2.2:8080/`).
+- `usesCleartextTraffic=true` habilitado para entorno local.
 
-### Flujo integrado
-1. `LoginFragment` consume `/api/auth/login` y guarda token.
-2. `RegisterFragment` consume `/api/auth/register`.
-3. `HomeFragment` consume actividades reales desde `/api/activities`.
-4. `ActivityDetailFragment` consulta `/api/activities/{id}`.
+## Configuración de red
 
-### Nota
-El paquete legacy `com.rutea.app.api` quedo removido para evitar endpoints desactualizados.
+- URL base: `app/src/main/java/com/rutea/app/activitiesandviews/di/NetworkModule.java`
+- Endpoints auth públicos (sin token):  
+  - `/api/auth/login`
+  - `/api/auth/register`
+  - `/api/auth/otp/request`
+  - `/api/auth/otp/verify`
+- Endpoints autenticados: resto de `/api/**` (incluye `change-email` y `change-password`).
 
-## Flujo reservas (Retrofit)
+## Arquitectura de navegación
 
-### Endpoints usados
-- `GET /api/disponibilities` para elegir horarios con cupo.
-- `POST /api/reserves` para crear reserva.
-- `GET /api/reserves/my-history` para listar Mis viajes.
-- `POST /api/reserves/{id}/cancel` disponible en capa de red para fase de cancelacion.
+- Activity única: `MainActivity`
+- Contenedor: `FragmentContainerView` + `NavHostFragment`
+- Graph principal: `nav_graph` + `home_nav_graph`
+- Bottom navigation en destinos de primer nivel.
 
-### Checklist manual de pruebas
-1. Loguearse en la app (token JWT activo).
-2. Entrar a Home y abrir el detalle de una actividad.
-3. Ir a Reservar, elegir horario y cantidad de personas, confirmar.
-4. Verificar llegada a pantalla de confirmacion.
-5. Abrir Mis viajes y validar que aparezca la nueva reserva.
-6. Validar caso sin cupo (mensaje de error amigable).
+## Módulos funcionales
+
+- **Auth**
+  - Login, registro, OTP.
+  - Persistencia de sesión en `TokenManager`.
+- **Home / Search / Favorites**
+  - Listados de actividades y favoritos con sincronización backend.
+- **Detalle de actividad**
+  - Información completa + galería de fotos en carrusel.
+- **Reservas**
+  - Selección de disponibilidad y creación de reserva.
+  - Confirmación y vista de historial/mis actividades.
+- **Perfil**
+  - Edición de datos personales.
+  - Cambio de foto local.
+  - Cambio de mail y contraseña con validación de contraseña actual.
+
+## Modo sin conexión (Mis Actividades)
+
+Se cachean reservas activas y su detalle esencial en Room:
+
+- datos de actividad y estado de reserva
+- destino, guía, duración, punto de encuentro
+- datos de reseña (si existen)
+- voucher/datos de confirmación necesarios para consulta
+
+Comportamiento:
+
+- al confirmar una reserva, se guarda en caché automáticamente
+- `HistoryFragment` carga primero caché local y luego red
+- al recuperar conexión, sincroniza con servidor y refresca estado
+- se muestra banner visual cuando la app está offline
+
+## Endpoints backend usados (resumen)
+
+- `POST /api/auth/login`
+- `POST /api/auth/register`
+- `POST /api/auth/otp/request`
+- `POST /api/auth/otp/verify`
+- `POST /api/auth/change-password`
+- `POST /api/auth/change-email`
+- `GET /api/travellers/me`
+- `PUT /api/travellers/me`
+- `GET /api/activities/**`
+- `GET /api/disponibilities`
+- `POST /api/reserves`
+- `GET /api/reserves/my-history`
+- `POST /api/reserves/{id}/cancel`
+- `GET /api/news/**`
+
+## Build
+
+Desde la raíz del proyecto:
+
+- Windows: `.\gradlew.bat :app:assembleDebug`
+
+## Nota
+
+Este README refleja el estado actual del proyecto con Hilt + `NetworkModule` + `TokenManager` y reemplaza referencias legacy antiguas.
