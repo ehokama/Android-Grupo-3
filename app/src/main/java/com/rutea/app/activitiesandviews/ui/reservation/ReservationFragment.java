@@ -18,6 +18,9 @@ import androidx.navigation.Navigation;
 
 import com.google.android.material.card.MaterialCardView;
 import com.rutea.app.R;
+import com.rutea.app.activitiesandviews.data.local.TokenManager;
+import com.rutea.app.activitiesandviews.data.local.db.CachedReserve;
+import com.rutea.app.activitiesandviews.data.local.db.CachedReserveDao;
 import com.rutea.app.activitiesandviews.data.models.dto.activity.ActivityDto;
 import com.rutea.app.activitiesandviews.data.network.ActivityApiService;
 import com.rutea.app.activitiesandviews.data.network.DisponibilityApiService;
@@ -38,6 +41,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.concurrent.Executors;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -69,6 +73,10 @@ public class ReservationFragment extends Fragment {
 
     @Inject
     ActivityApiService activityApiService;
+    @Inject
+    CachedReserveDao cachedReserveDao;
+    @Inject
+    TokenManager tokenManager;
 
     private Spinner spinnerHorario;
     private Spinner spinnerFecha;
@@ -198,6 +206,7 @@ public class ReservationFragment extends Fragment {
                             }
 
                             ReserveDto reserve = response.body();
+                            saveReserveToCacheAsync(reserve);
                             String[] dateTime = splitDateTime(selected.getHour());
 
                             Bundle args = new Bundle();
@@ -379,5 +388,40 @@ public class ReservationFragment extends Fragment {
 
     private String formatCurrency(double value) {
         return String.format(Locale.getDefault(), "$%.2f", value);
+    }
+
+    private void saveReserveToCacheAsync(ReserveDto reserve) {
+        if (reserve == null || reserve.getIdReserve() == null) return;
+        String cacheKey = getReserveCacheKey();
+
+        Executors.newSingleThreadExecutor().execute(() -> {
+            CachedReserve cached = new CachedReserve(
+                    reserve.getIdReserve(),
+                    cacheKey,
+                    reserve.getActivityTitle(),
+                    reserve.getActivityId(),
+                    reserve.getReservationDate(),
+                    reserve.getCreationDate(),
+                    reserve.getNumberOfPeople(),
+                    reserve.getTotalPrice(),
+                    reserve.getState(),
+                    reserve.getGuideName(),
+                    reserve.getCountry(),
+                    reserve.getCity(),
+                    reserve.getDuration(),
+                    reserve.getMeetingPoint(),
+                    reserve.isCanRate(),
+                    reserve.isAlreadyRated(),
+                    reserve.getMyActivityRating(),
+                    reserve.getMyGuideRating(),
+                    reserve.getMyComment()
+            );
+            cachedReserveDao.insert(cached);
+        });
+    }
+
+    private String getReserveCacheKey() {
+        String email = tokenManager.getEmail();
+        return (email == null || email.trim().isEmpty()) ? "__offline_session__" : email.trim().toLowerCase(Locale.ROOT);
     }
 }

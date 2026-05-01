@@ -13,6 +13,9 @@ public interface CachedReserveDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<CachedReserve> reserves);
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insert(CachedReserve reserve);
+
     @Query("SELECT * FROM cached_reserves WHERE userEmail = :email ORDER BY creationDate DESC")
     List<CachedReserve> getByEmail(String email);
 

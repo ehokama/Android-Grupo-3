@@ -43,7 +43,7 @@ public class ReserveDetailFragment extends Fragment {
     private ImageView ivDetailImage;
     private Chip chipDetailState;
     private TextView tvDetailTitle, tvDetailReserveId, tvDetailDestino,
-            tvDetailGuide, tvDetailActivityDate, tvDetailDuration,
+            tvDetailGuide, tvDetailActivityDate, tvDetailMeetingPoint, tvDetailDuration,
             tvDetailPeople, tvDetailPrice, tvDisplayComment, tvCannotRate;
     private LinearLayout layoutReviewDisplay, layoutReviewForm;
     private LinearLayout starsActivityDisplay, starsGuideDisplay;
@@ -63,12 +63,15 @@ public class ReserveDetailFragment extends Fragment {
     public static Bundle buildArgs(ReserveDto reserve) {
         // Pasamos los campos que necesitamos como Bundle (ReserveDto no es Serializable/Parcelable)
         Bundle b = new Bundle();
+        String country = reserve.getCountry() != null ? reserve.getCountry() : "—";
+        String city = reserve.getCity() != null ? reserve.getCity() : "—";
         b.putLong("idReserve",       reserve.getIdReserve() != null ? reserve.getIdReserve() : -1);
         b.putString("title",         reserve.getActivityTitle());
         b.putString("state",         reserve.getState());
-        b.putString("destino",       reserve.getCountry() + ", " + reserve.getCity());
+        b.putString("destino",       country + ", " + city);
         b.putString("guide",         reserve.getGuideName());
         b.putString("activityDate",  reserve.getReservationDate());
+        b.putString("meetingPoint",  reserve.getMeetingPoint());
         b.putInt("duration",         reserve.getDuration() != null ? reserve.getDuration() : 0);
         b.putInt("people",           reserve.getNumberOfPeople() != null ? reserve.getNumberOfPeople() : 0);
         b.putDouble("price",         reserve.getTotalPrice() != null ? reserve.getTotalPrice() : 0.0);
@@ -104,6 +107,7 @@ public class ReserveDetailFragment extends Fragment {
         tvDetailDestino      = view.findViewById(R.id.tvDetailDestino);
         tvDetailGuide        = view.findViewById(R.id.tvDetailGuide);
         tvDetailActivityDate = view.findViewById(R.id.tvDetailActivityDate);
+        tvDetailMeetingPoint = view.findViewById(R.id.tvDetailMeetingPoint);
         tvDetailDuration     = view.findViewById(R.id.tvDetailDuration);
         tvDetailPeople       = view.findViewById(R.id.tvDetailPeople);
         tvDetailPrice        = view.findViewById(R.id.tvDetailPrice);
@@ -134,6 +138,7 @@ public class ReserveDetailFragment extends Fragment {
         String destino = args.getString("destino", "");
         String guide   = args.getString("guide", "");
         String date    = args.getString("activityDate", "");
+        String meetingPoint = args.getString("meetingPoint", "");
         int duration   = args.getInt("duration", 0);
         int people     = args.getInt("people", 0);
         double price   = args.getDouble("price", 0.0);
@@ -144,6 +149,7 @@ public class ReserveDetailFragment extends Fragment {
         tvDetailDestino.setText(destino);
         tvDetailGuide.setText("Guía: " + guide);
         tvDetailActivityDate.setText("Fecha: " + formatDate(date));
+        tvDetailMeetingPoint.setText("Punto de encuentro: " + (meetingPoint == null || meetingPoint.isEmpty() ? "No disponible" : meetingPoint));
         tvDetailDuration.setText("Duración: " + duration + " minutos");
         tvDetailPeople.setText(people + (people == 1 ? " persona" : " personas"));
         tvDetailPrice.setText(String.format(Locale.getDefault(), "$%.2f", price));

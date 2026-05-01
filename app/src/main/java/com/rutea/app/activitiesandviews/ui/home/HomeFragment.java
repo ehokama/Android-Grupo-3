@@ -23,6 +23,7 @@ import com.rutea.app.activitiesandviews.data.local.db.CachedFavoriteDao;
 import com.rutea.app.activitiesandviews.data.models.dto.news.NewsDto;
 import com.rutea.app.activitiesandviews.data.network.ActivityApiService;
 import com.rutea.app.activitiesandviews.data.models.dto.activity.ActivityDto;
+import com.rutea.app.activitiesandviews.data.models.dto.disponibility.DisponibilityDto;
 import com.rutea.app.activitiesandviews.data.models.dto.common.PageResponse;
 import com.rutea.app.activitiesandviews.data.network.NewsApiService;
 import com.rutea.app.activitiesandviews.ui.news.NewsAdapter;
@@ -174,7 +175,7 @@ public class HomeFragment extends Fragment {
 
             // Título
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    dpToPx(160), dpToPx(120));
+                    dpToPx(180), dpToPx(220));
             params.setMarginEnd(dpToPx(12));
             card.setLayoutParams(params);
 
@@ -199,12 +200,17 @@ public class HomeFragment extends Fragment {
             // Duración
             TextView tvDuration = card.findViewById(R.id.tvCardDuration);
             tvDuration.setText(activity.getDuration() != null
-                    ? activity.getDuration() + " hs" : "—");
+                    ? activity.getDuration() + " min" : "—");
 
             // Precio
             TextView tvPrice = card.findViewById(R.id.tvCardPrice);
             tvPrice.setText(activity.getPrice() != null
                     ? String.format(Locale.getDefault(), "$%.0f", activity.getPrice()) : "Gratis");
+
+            // Cupos disponibles (suma de disponibilidades futuras)
+            TextView tvQuota = card.findViewById(R.id.tvCardQuota);
+            Integer availableQuota = getAvailableQuota(activity);
+            tvQuota.setText(availableQuota != null ? availableQuota + " cupos" : "Sin cupos");
 
             // Imagen
             ImageView imageView = card.findViewById(R.id.ivCard);
@@ -337,5 +343,18 @@ public class HomeFragment extends Fragment {
 
     private int dpToPx(int dp) {
         return Math.round(dp * getResources().getDisplayMetrics().density);
+    }
+
+    private Integer getAvailableQuota(ActivityDto activity) {
+        if (activity.getDisponibilities() == null || activity.getDisponibilities().isEmpty()) {
+            return null;
+        }
+        int total = 0;
+        for (DisponibilityDto d : activity.getDisponibilities()) {
+            if (d != null && d.getDisponibleQuota() != null && d.getDisponibleQuota() > 0) {
+                total += d.getDisponibleQuota();
+            }
+        }
+        return total;
     }
 }

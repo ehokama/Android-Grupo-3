@@ -16,6 +16,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.bumptech.glide.Glide;
 import com.rutea.app.R;
@@ -26,6 +28,7 @@ import com.rutea.app.activitiesandviews.data.network.ActivityApiService;
 import com.rutea.app.activitiesandviews.data.models.dto.activity.ActivityDto;
 import com.rutea.app.activitiesandviews.data.models.dto.activity.ImageDto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import java.util.concurrent.Executors;
@@ -57,6 +60,23 @@ public class ActivityDetailFragment extends Fragment {
     private ActivityDto loadedActivity;
     private String meetingPointText = null;
 
+    private ActivityGalleryAdapter galleryAdapter;
+    private View cardGallery;
+    private ViewPager2 vpGallery;
+    private TextView tvGalleryIndicator;
+
+    private final ViewPager2.OnPageChangeCallback galleryPageChangeCallback =
+            new ViewPager2.OnPageChangeCallback() {
+                @Override
+                public void onPageSelected(int position) {
+                    if (!isAdded() || galleryAdapter == null || tvGalleryIndicator == null) return;
+                    int n = galleryAdapter.getItemCount();
+                    if (n > 1) {
+                        tvGalleryIndicator.setText((position + 1) + " / " + n);
+                    }
+                }
+            };
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -82,6 +102,12 @@ public class ActivityDetailFragment extends Fragment {
         TextView tvInclusions = view.findViewById(R.id.tvInclusions);
         TextView tvCancellation = view.findViewById(R.id.tvCancellation);
         Button btnMeetingPoint = view.findViewById(R.id.btnMeetingPoint);
+        cardGallery = view.findViewById(R.id.cardGallery);
+        vpGallery = view.findViewById(R.id.vpActivityGallery);
+        tvGalleryIndicator = view.findViewById(R.id.tvGalleryPageIndicator);
+        galleryAdapter = new ActivityGalleryAdapter();
+        vpGallery.setAdapter(galleryAdapter);
+        vpGallery.registerOnPageChangeCallback(galleryPageChangeCallback);
 
         long activityId = -1L;
         String fallbackName = "Actividad";
@@ -130,7 +156,7 @@ public class ActivityDetailFragment extends Fragment {
 
                     tvNombre.setText(valueOrDefault(dto.getTitle(), selectedFallbackName));
                     tvDescripcion.setText(valueOrDefault(dto.getDescription(), "Sin descripción"));
-                    tvHorario.setText("🕐 Duración: " + valueOrDefault(dto.getDuration(), "-") + " hs");
+                    tvHorario.setText("🕐 Duración: " + valueOrDefault(dto.getDuration(), "-") + " min");
                     tvUbicacion.setText("📍 " + valueOrDefault(dto.getUbicationName(), "Ubicación no disponible"));
                     tvCosto.setText("💲 " + valueOrDefault(dto.getPrice(), "-"));
                     tvGuia.setText("⭐ Rating: " + valueOrDefault(dto.getRating(), "-"));
@@ -157,6 +183,8 @@ public class ActivityDetailFragment extends Fragment {
                     if (meetingPointText != null && !meetingPointText.trim().isEmpty()) {
                         btnMeetingPoint.setVisibility(View.VISIBLE);
                     }
+
+                    bindGallery(dto.getImages());
                 }
 
                 @Override
@@ -195,6 +223,14 @@ public class ActivityDetailFragment extends Fragment {
             Navigation.findNavController(view)
                     .navigate(R.id.action_detail_to_reservation, args);
         });
+    }
+
+    @Override
+    public void onDestroyView() {
+        if (vpGallery != null) {
+            vpGallery.unregisterOnPageChangeCallback(galleryPageChangeCallback);
+        }
+        super.onDestroyView();
     }
 
     private void toggleFavorite(long activityId) {
@@ -236,5 +272,46 @@ public class ActivityDetailFragment extends Fragment {
 
     private String valueOrDefault(Number value, String defaultValue) {
         return value == null ? defaultValue : String.valueOf(value);
+    }
+
+    private static List<String> buildImageRawUrls(List<ImageDto> images) {
+        List<String> urls = new ArrayList<>();
+        if (images == null) return urls;
+        for (ImageDto img : images) {
+            if (img != null && img.getIdImage() != null) {
+                urls.add(IMAGE_BASE_URL + img.getIdImage() + "/raw");
+            }
+        }
+        return urls;
+    }
+
+    private void bindGallery(List<ImageDto> images) {
+        if (cardGallery == null || vpGallery == null || galleryAdapter == null || tvGalleryIndicator == null) {
+            return;
+        }
+        List<String> urls = buildImageRawUrls(images);
+        if (urls.isEmpty()) {
+            cardGallery.setVisibility(View.GONE);
+            return;
+        }
+        cardGallery.setVisibility(View.VISIBLE);
+        galleryAdapter.setUrls(urls);
+        vpGallery.setOffscreenPageLimit(Math.min(urls.size(), 3));
+        vpGallery.setCurrentItem(0, false);
+        vpGallery.post(() -> disableGalleryNestedScrollConflict(vpGallery));
+
+        if (urls.size() > 1) {
+            tvGalleryIndicator.setVisibility(View.VISIBLE);
+            tvGalleryIndicator.setText("1 / " + urls.size());
+        } else {
+            tvGalleryIndicator.setVisibility(View.GONE);
+        }
+    }
+
+    private static void disableGalleryNestedScrollConflict(ViewPager2 viewPager) {
+        View child = viewPager.getChildAt(0);
+        if (child instanceof RecyclerView) {
+            ((RecyclerView) child).setNestedScrollingEnabled(false);
+        }
     }
 }

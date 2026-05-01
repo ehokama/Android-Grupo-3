@@ -21,7 +21,9 @@
                 android:layout_width="100dp"
                 android:layout_height="100dp"
                 android:src="@drawable/ic_launcher_foreground"
-                android:background="@android:color/darker_gray"
+                android:background="@drawable/bg_profile_circle"
+                android:clipToOutline="true"
+                android:scaleType="centerCrop"
                 android:clickable="true"
                 android:focusable="true"
                 android:contentDescription="Cambiar foto de perfil" />

@@ -7,6 +7,7 @@ import android.util.Log;
 import com.rutea.app.activitiesandviews.data.network.ActivityApiService;
 import com.rutea.app.activitiesandviews.data.network.AuthApiService;
 import com.rutea.app.activitiesandviews.data.network.DisponibilityApiService;
+import com.rutea.app.activitiesandviews.data.network.NewsApiService;
 import com.rutea.app.activitiesandviews.data.network.ReserveApiService;
 import com.rutea.app.activitiesandviews.data.network.ReviewApiService;
 import com.rutea.app.activitiesandviews.data.network.TravellerApiService;
@@ -49,17 +50,20 @@ public class NetworkModule {
                     String token = tokenManager.getToken();
                     Request request = chain.request();
 
-                    // No agregar el token a los endpoints de autenticación (login, registro, otp)
+                    // No agregar token solo a endpoints públicos de auth (login/registro/otp).
                     String path = request.url().encodedPath();
-                    boolean isAuthEndpoint = path.contains("/api/auth/");
+                    boolean isPublicAuthEndpoint =
+                            path.contains("/api/auth/login")
+                                    || path.contains("/api/auth/register")
+                                    || path.contains("/api/auth/otp/");
 
-                    if (token != null && !token.isEmpty() && !isAuthEndpoint) {
+                    if (token != null && !token.isEmpty() && !isPublicAuthEndpoint) {
                         request = request.newBuilder()
                                 .addHeader("Authorization", "Bearer " + token)
                                 .build();
                         Log.d(TAG, "Authorization header agregado: Bearer " + token);
-                    } else if (isAuthEndpoint) {
-                        Log.d(TAG, "Endpoint de auth detectado — omitiendo Authorization header");
+                    } else if (isPublicAuthEndpoint) {
+                        Log.d(TAG, "Endpoint auth público detectado — omitiendo Authorization header");
                     } else {
                         Log.d(TAG, "Sin token — request sin Authorization header");
                     }
@@ -70,8 +74,11 @@ public class NetworkModule {
                     okhttp3.Response response = chain.proceed(chain.request());
                     if (response.code() == 401) {
                         String path = chain.request().url().encodedPath();
-                        boolean isAuthEndpoint = path.contains("/api/auth/");
-                        if (!isAuthEndpoint) {
+                        boolean isPublicAuthEndpoint =
+                                path.contains("/api/auth/login")
+                                        || path.contains("/api/auth/register")
+                                        || path.contains("/api/auth/otp/");
+                        if (!isPublicAuthEndpoint) {
                             Log.w(TAG, "Token expirado detectado (401). Cerrando sesión...");
                             tokenManager.clearSession();
                             Intent intent = new Intent(ACTION_SESSION_EXPIRED);
@@ -105,6 +112,12 @@ public class NetworkModule {
     @Singleton
     public ActivityApiService provideActivityApiService(Retrofit retrofit) {
         return retrofit.create(ActivityApiService.class);
+    }
+
+    @Provides
+    @Singleton
+    public NewsApiService provideNewsApiService(Retrofit retrofit) {
+        return retrofit.create(NewsApiService.class);
     }
 
     @Provides
