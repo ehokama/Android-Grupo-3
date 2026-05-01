@@ -1,5 +1,7 @@
 package com.rutea.app.activitiesandviews.data.models.dto.activity;
 
+import com.rutea.app.activitiesandviews.data.models.dto.disponibility.DisponibilityDto;
+
 import java.util.List;
 
 public class ActivityDto {
@@ -17,6 +19,7 @@ public class ActivityDto {
     private String ubicationName;
     private Long ubicationId;
     private List<ImageDto> images;
+    private List<DisponibilityDto> disponibilities;
 
     public Long getId() {
         return id;
@@ -72,5 +75,9 @@ public class ActivityDto {
 
     public List<ImageDto> getImages() {
         return images;
+    }
+
+    public List<DisponibilityDto> getDisponibilities() {
+        return disponibilities;
     }
 }

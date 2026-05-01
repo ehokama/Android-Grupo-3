@@ -7,6 +7,7 @@ import android.util.Log;
 import com.rutea.app.activitiesandviews.data.network.ActivityApiService;
 import com.rutea.app.activitiesandviews.data.network.AuthApiService;
 import com.rutea.app.activitiesandviews.data.network.DisponibilityApiService;
+import com.rutea.app.activitiesandviews.data.network.NewsApiService;
 import com.rutea.app.activitiesandviews.data.network.ReserveApiService;
 import com.rutea.app.activitiesandviews.data.network.ReviewApiService;
 import com.rutea.app.activitiesandviews.data.network.TravellerApiService;
@@ -105,6 +106,12 @@ public class NetworkModule {
     @Singleton
     public ActivityApiService provideActivityApiService(Retrofit retrofit) {
         return retrofit.create(ActivityApiService.class);
+    }
+
+    @Provides
+    @Singleton
+    public NewsApiService provideNewsApiService(Retrofit retrofit) {
+        return retrofit.create(NewsApiService.class);
     }
 
     @Provides

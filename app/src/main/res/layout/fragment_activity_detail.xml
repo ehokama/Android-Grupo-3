@@ -268,6 +268,51 @@
                 android:visibility="gone"
                 app:cornerRadius="12dp" />
 
+            <!-- Galería de fotos (carrusel; una entrada por imagen en /api/images/{id}/raw) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardGallery"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:visibility="gone"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="10dp"
+                        android:text="Galería de fotos"
+                        android:textColor="#212121"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <androidx.viewpager2.widget.ViewPager2
+                        android:id="@+id/vpActivityGallery"
+                        android:layout_width="match_parent"
+                        android:layout_height="200dp"
+                        android:clipChildren="false"
+                        android:clipToPadding="false" />
+
+                    <TextView
+                        android:id="@+id/tvGalleryPageIndicator"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center"
+                        android:textColor="#757575"
+                        android:textSize="12sp"
+                        android:visibility="gone" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

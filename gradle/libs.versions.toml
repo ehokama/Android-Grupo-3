@@ -17,6 +17,7 @@ hilt = "2.59.2"
 room = "2.6.1"
 securityCrypto = "1.1.0-alpha06"
 biometric = "1.2.0-alpha05"
+viewpager2 = "1.1.0"
 
 [libraries]
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
@@ -39,6 +40,7 @@ glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "gl
 okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+viewpager2 = { group = "androidx.viewpager2", name = "viewpager2", version.ref = "viewpager2" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

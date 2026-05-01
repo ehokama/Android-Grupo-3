@@ -55,6 +55,8 @@ dependencies {
     // Glide for images
     implementation(libs.glide)
 
+    implementation(libs.viewpager2)
+
     // Room for offline cache
     implementation(libs.room.runtime)
     annotationProcessor(libs.room.compiler)
