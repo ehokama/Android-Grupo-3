@@ -36,6 +36,7 @@ public class ReserveDto {
     private String city;
 
     private Integer duration;
+    private String meetingPoint;
 
     public Integer getDuration() {
         return duration;
@@ -43,6 +44,14 @@ public class ReserveDto {
 
     public void setDuration(Integer duration) {
         this.duration = duration;
+    }
+
+    public String getMeetingPoint() {
+        return meetingPoint;
+    }
+
+    public void setMeetingPoint(String meetingPoint) {
+        this.meetingPoint = meetingPoint;
     }
 
     public String getCity() {

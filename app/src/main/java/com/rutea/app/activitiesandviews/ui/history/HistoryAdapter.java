@@ -81,12 +81,14 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.VH> {
         void bind(ReserveDto r) {
             tvTitle.setText(r.getActivityTitle() != null ? r.getActivityTitle() : "Actividad");
             tvReserveId.setText("Reserva #" + r.getIdReserve());
-            tvDate.setText("Guía: " + r.getGuideName());
+            tvDate.setText("Guía: " + (r.getGuideName() != null ? r.getGuideName() : "No asignado"));
             tvActivityDate.setText("Fecha actividad: " + formatDate(r.getReservationDate()));
             tvPeople.setText(r.getNumberOfPeople() + (r.getNumberOfPeople() == 1 ? " persona" : " personas"));
             tvPrice.setText(String.format(Locale.getDefault(), "$%.2f", r.getTotalPrice() != null ? r.getTotalPrice() : 0.0));
-            tvDestino.setText("Destino: "+ r.getCountry()+", "+r.getCity());
-            tvDuration.setText("Duración: " + r.getDuration() + " minutos.");
+            String country = r.getCountry() != null ? r.getCountry() : "—";
+            String city = r.getCity() != null ? r.getCity() : "—";
+            tvDestino.setText("Destino: " + country + ", " + city);
+            tvDuration.setText("Duración: " + (r.getDuration() != null ? r.getDuration() : 0) + " minutos.");
 
             // ─── Estado chip ───
             bindStateChip(r.getState());

@@ -8,6 +8,10 @@ import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -65,6 +69,8 @@ public class HistoryFragment extends Fragment {
     @Inject TokenManager tokenManager;
     @Inject CachedReserveDao cachedReserveDao;
     private final Map<Long, ReviewDto> myReviewsByActivity = new HashMap<>();
+    private ConnectivityManager connectivityManager;
+    private ConnectivityManager.NetworkCallback networkCallback;
 
     // Lista completa sin filtrar
     private List<ReserveDto> allReserves = new ArrayList<>();
@@ -103,16 +109,16 @@ public class HistoryFragment extends Fragment {
 
         loadCachedReserves();
         loadHistory();
+        setupConnectivitySync();
     }
 
     // ─── Cache-first ──────────────────────────────────────────────────────────
 
     private void loadCachedReserves() {
-        String email = tokenManager.getEmail();
-        if (email == null || email.isEmpty()) return;
+        String cacheKey = getReserveCacheKey();
 
         Executors.newSingleThreadExecutor().execute(() -> {
-            List<CachedReserve> cached = cachedReserveDao.getByEmail(email);
+            List<CachedReserve> cached = cachedReserveDao.getByEmail(cacheKey);
             if (cached == null || cached.isEmpty() || !isAdded()) return;
 
             List<ReserveDto> dtos = mapCachedToDtos(cached);
@@ -132,6 +138,16 @@ public class HistoryFragment extends Fragment {
             dto.setNumberOfPeople(c.numberOfPeople);
             dto.setTotalPrice(c.totalPrice);
             dto.setState(c.state);
+            dto.setGuideName(c.guideName);
+            dto.setCountry(c.country);
+            dto.setCity(c.city);
+            dto.setDuration(c.duration);
+            dto.setMeetingPoint(c.meetingPoint);
+            dto.setCanRate(c.canRate);
+            dto.setAlreadyRated(c.alreadyRated);
+            dto.setMyActivityRating(c.myActivityRating);
+            dto.setMyGuideRating(c.myGuideRating);
+            dto.setMyComment(c.myComment);
             list.add(dto);
         }
         return list;
@@ -224,18 +240,22 @@ public class HistoryFragment extends Fragment {
         LocalDateTime now = LocalDateTime.now();
         for (ReserveDto reserve : reserves) {
             ReviewDto review = reserve.getActivityId() != null ? myReviewsByActivity.get(reserve.getActivityId()) : null;
-            boolean alreadyRated = review != null;
+            boolean hasReviewFromApi = review != null;
             boolean completed = "COMPLETED".equalsIgnoreCase(reserve.getState());
             boolean withinWindow = isWithinRatingWindow(reserve.getReservationDate(), now);
 
-            reserve.setAlreadyRated(alreadyRated);
-            reserve.setCanRate(completed && withinWindow && !alreadyRated);
-
-            if (alreadyRated) {
+            if (hasReviewFromApi) {
+                reserve.setAlreadyRated(true);
+                reserve.setCanRate(false);
                 reserve.setMyActivityRating(review.getRating());
                 reserve.setMyGuideRating(review.getGuideRating());
                 reserve.setMyComment(review.getComment());
+            } else if (reserve.isAlreadyRated()) {
+                // Conserva la reseña previamente cacheada para modo offline.
+                reserve.setCanRate(false);
             } else {
+                reserve.setAlreadyRated(false);
+                reserve.setCanRate(completed && withinWindow);
                 reserve.setMyActivityRating(null);
                 reserve.setMyGuideRating(null);
                 reserve.setMyComment(null);
@@ -493,26 +513,73 @@ public class HistoryFragment extends Fragment {
     // ─── Caché ───────────────────────────────────────────────────────────────
 
     private void saveToCacheAsync(List<ReserveDto> reserves) {
-        String email = tokenManager.getEmail();
-        if (email == null || email.isEmpty()) return;
+        String cacheKey = getReserveCacheKey();
 
         Executors.newSingleThreadExecutor().execute(() -> {
-            cachedReserveDao.deleteByEmail(email);
+            cachedReserveDao.deleteByEmail(cacheKey);
             List<CachedReserve> cached = new ArrayList<>();
             for (ReserveDto r : reserves) {
                 cached.add(new CachedReserve(
                         r.getIdReserve(),
-                        email,
+                        cacheKey,
                         r.getActivityTitle(),
                         r.getActivityId(),
                         r.getReservationDate(),
+                        r.getCreationDate(),
                         r.getNumberOfPeople(),
                         r.getTotalPrice(),
-                        r.getState()
+                        r.getState(),
+                        r.getGuideName(),
+                        r.getCountry(),
+                        r.getCity(),
+                        r.getDuration(),
+                        r.getMeetingPoint(),
+                        r.isCanRate(),
+                        r.isAlreadyRated(),
+                        r.getMyActivityRating(),
+                        r.getMyGuideRating(),
+                        r.getMyComment()
                 ));
             }
             cachedReserveDao.insertAll(cached);
         });
+    }
+
+    private String getReserveCacheKey() {
+        String email = tokenManager.getEmail();
+        return (email == null || email.trim().isEmpty()) ? "__offline_session__" : email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private void setupConnectivitySync() {
+        if (!isAdded()) return;
+        connectivityManager = requireContext().getSystemService(ConnectivityManager.class);
+        if (connectivityManager == null) return;
+
+        networkCallback = new ConnectivityManager.NetworkCallback() {
+            @Override
+            public void onAvailable(@NonNull Network network) {
+                if (!isAdded()) return;
+                requireActivity().runOnUiThread(HistoryFragment.this::syncHistorySafely);
+            }
+        };
+
+        NetworkRequest request = new NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .build();
+        connectivityManager.registerNetworkCallback(request, networkCallback);
+    }
+
+    @Override
+    public void onDestroyView() {
+        if (connectivityManager != null && networkCallback != null) {
+            connectivityManager.unregisterNetworkCallback(networkCallback);
+        }
+        super.onDestroyView();
+    }
+
+    private void syncHistorySafely() {
+        if (!isAdded()) return;
+        loadHistory();
     }
 
     // ─── UI helpers ──────────────────────────────────────────────────────────

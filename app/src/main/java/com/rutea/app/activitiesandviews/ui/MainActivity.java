@@ -2,11 +2,16 @@ package com.rutea.app.activitiesandviews.ui;
 
 import com.rutea.app.R;
 import android.content.BroadcastReceiver;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -29,6 +34,9 @@ public class MainActivity extends AppCompatActivity {
 
     private NavController navController;
     private BottomNavigationView bottomNavigationView;
+    private TextView tvOfflineBanner;
+    private ConnectivityManager connectivityManager;
+    private ConnectivityManager.NetworkCallback networkCallback;
 
     // Receptor que escucha cuando el token expira en cualquier parte de la app
     private final BroadcastReceiver sessionExpiredReceiver = new BroadcastReceiver() {
@@ -50,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         bottomNavigationView = findViewById(R.id.bottom_nav_view);
+        tvOfflineBanner = findViewById(R.id.tvOfflineBanner);
 
         NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.nav_host_fragment);
@@ -85,10 +94,14 @@ public class MainActivity extends AppCompatActivity {
         // Registrar el receptor para escuchar sesiones expiradas
         IntentFilter filter = new IntentFilter(NetworkModule.ACTION_SESSION_EXPIRED);
         registerReceiver(sessionExpiredReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        observeConnectivity();
     }
 
     @Override
     protected void onDestroy() {
+        if (connectivityManager != null && networkCallback != null) {
+            connectivityManager.unregisterNetworkCallback(networkCallback);
+        }
         super.onDestroy();
         unregisterReceiver(sessionExpiredReceiver);
     }
@@ -96,5 +109,32 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onSupportNavigateUp() {
         return navController.navigateUp() || super.onSupportNavigateUp();
+    }
+
+    private void observeConnectivity() {
+        connectivityManager = getSystemService(ConnectivityManager.class);
+        if (connectivityManager == null) return;
+
+        networkCallback = new ConnectivityManager.NetworkCallback() {
+            @Override
+            public void onAvailable(Network network) {
+                runOnUiThread(() -> tvOfflineBanner.setVisibility(View.GONE));
+            }
+
+            @Override
+            public void onLost(Network network) {
+                runOnUiThread(() -> tvOfflineBanner.setVisibility(View.VISIBLE));
+            }
+        };
+
+        NetworkRequest request = new NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .build();
+        connectivityManager.registerNetworkCallback(request, networkCallback);
+
+        Network active = connectivityManager.getActiveNetwork();
+        NetworkCapabilities caps = active != null ? connectivityManager.getNetworkCapabilities(active) : null;
+        boolean online = caps != null && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        tvOfflineBanner.setVisibility(online ? View.GONE : View.VISIBLE);
     }
 }
