@@ -39,6 +39,7 @@ public class NewsDetailFragment extends Fragment {
 
     private ActivityDto activityForReservation;
     private long activityForReservationId = -1L;
+    private long currentNewsId = -1L;
 
     public NewsDetailFragment() {
         super(R.layout.fragment_news_detail);
@@ -54,6 +55,8 @@ public class NewsDetailFragment extends Fragment {
 
         Bundle args = getArguments();
         if (args == null) return;
+
+        currentNewsId = args.getLong("newsId", -1L);
 
         // Populate with passed args immediately for instant display
         bindArgs(view, args);
@@ -163,6 +166,9 @@ public class NewsDetailFragment extends Fragment {
             btnActivity.setOnClickListener(v -> {
                 Bundle bundle = new Bundle();
                 bundle.putLong("activityId", finalId);
+                if (currentNewsId > 0) {
+                    bundle.putLong("appliedNewsId", currentNewsId);
+                }
                 String activityName = activityForReservation != null && activityForReservation.getTitle() != null
                         ? activityForReservation.getTitle()
                         : (title != null && !title.isEmpty() ? title : "Actividad");
