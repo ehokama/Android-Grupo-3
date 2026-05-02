@@ -64,6 +64,7 @@ public class ReservationFragment extends Fragment {
     private double activityPrice = -1;
     private String discountMode;
     private int discountPercent;
+    private Long appliedNewsId;
 
     @Inject
     ReserveApiService reserveApiService;
@@ -107,6 +108,8 @@ public class ReservationFragment extends Fragment {
             activityPrice = getArguments().getDouble("activityPrice", -1);
             discountMode = getArguments().getString("discountMode", null);
             discountPercent = getArguments().getInt("discountPercent", 0);
+            long newsIdArg = getArguments().getLong("appliedNewsId", -1L);
+            appliedNewsId = newsIdArg > 0 ? newsIdArg : null;
         }
         ((TextView) view.findViewById(R.id.tvNombreActividad)).setText(nombreActividad);
 
@@ -192,7 +195,12 @@ public class ReservationFragment extends Fragment {
             }
 
             btnConfirmar.setEnabled(false);
-            reserveApiService.createReserve(ReserveRequestFactory.create(selected.getIdDisponibility(), personas))
+                reserveApiService.createReserve(ReserveRequestFactory.createWithDiscount(
+                    selected.getIdDisponibility(),
+                    personas,
+                    discountMode,
+                    discountPercent,
+                    appliedNewsId))
                     .enqueue(new Callback<ReserveDto>() {
                         @Override
                         public void onResponse(@NonNull Call<ReserveDto> call, @NonNull Response<ReserveDto> response) {
