@@ -118,7 +118,7 @@ public class HomeFragment extends Fragment {
             @Override
             public void onFailure(@NonNull Call<List<ActivityDto>> call, @NonNull Throwable t) {
                 if (!isAdded()) return;
-                Toast.makeText(requireContext(), "Error de red", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "No se pudieron cargar los destinos. Revisá tu conexión.", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -139,7 +139,7 @@ public class HomeFragment extends Fragment {
             @Override
             public void onFailure(@NonNull Call<List<ActivityDto>> call, @NonNull Throwable t) {
                 if (!isAdded()) return;
-                Toast.makeText(requireContext(), "Error de red", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "No se pudieron cargar las recomendaciones. Revisá tu conexión.", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -160,7 +160,7 @@ public class HomeFragment extends Fragment {
             @Override
             public void onFailure(@NonNull Call<List<ActivityDto>> call, @NonNull Throwable t) {
                 if (!isAdded()) return;
-                Toast.makeText(requireContext(), "Error de red", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "No se pudieron cargar las mejor puntuadas. Revisá tu conexión.", Toast.LENGTH_SHORT).show();
             }
         });
     }

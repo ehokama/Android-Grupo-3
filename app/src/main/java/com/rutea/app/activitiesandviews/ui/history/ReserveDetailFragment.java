@@ -306,7 +306,7 @@ public class ReserveDetailFragment extends Fragment {
             @Override
             public void onFailure(@NonNull Call<ReviewDto> call, @NonNull Throwable t) {
                 if (!isAdded()) return;
-                Toast.makeText(requireContext(), "Error de red", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "No se pudo enviar la calificación. Revisá tu conexión e intentá de nuevo.", Toast.LENGTH_SHORT).show();
                 btnSubmitReview.setEnabled(true);
             }
         });
