@@ -242,7 +242,7 @@ public class SearchFragment extends Fragment {
         public void onFailure(@NonNull Call<PageResponse<ActivityDto>> call, @NonNull Throwable t) {
             if (!isAdded()) return;
             isLoading = false;
-            Toast.makeText(requireContext(), "Error de red", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), "No se pudo realizar la búsqueda. Revisá tu conexión.", Toast.LENGTH_SHORT).show();
         }
     };
 
