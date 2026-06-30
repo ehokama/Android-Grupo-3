@@ -13,50 +13,30 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
 import com.bumptech.glide.Glide;
 import com.rutea.app.R;
-import com.rutea.app.activitiesandviews.data.local.TokenManager;
-import com.rutea.app.activitiesandviews.data.local.db.CachedFavorite;
-import com.rutea.app.activitiesandviews.data.local.db.CachedFavoriteDao;
 import com.rutea.app.activitiesandviews.data.models.dto.news.NewsDto;
-import com.rutea.app.activitiesandviews.data.network.ActivityApiService;
 import com.rutea.app.activitiesandviews.data.models.dto.activity.ActivityDto;
 import com.rutea.app.activitiesandviews.data.models.dto.disponibility.DisponibilityDto;
-import com.rutea.app.activitiesandviews.data.models.dto.common.PageResponse;
-import com.rutea.app.activitiesandviews.data.network.NewsApiService;
 import com.rutea.app.activitiesandviews.ui.news.NewsAdapter;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Executors;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import java.util.Locale;
 
 import dagger.hilt.android.AndroidEntryPoint;
-import javax.inject.Inject;
-import java.util.Locale;
+
 @AndroidEntryPoint
 public class HomeFragment extends Fragment {
 
-    @Inject
-    ActivityApiService activityApiService;
+    private HomeViewModel viewModel;
 
-    @Inject
-    NewsApiService newsApiService;
-
-    @Inject
-    CachedFavoriteDao cachedFavoriteDao;
-
-    @Inject
-    TokenManager tokenManager;
-
-    // IDs de actividades favoritas del usuario (cargado al inicio)
-    private final Set<Long> favoriteIds = new HashSet<>();
+    // Local copy of favorite IDs, kept in sync with LiveData for use inside renderCards
+    private Set<Long> localFavoriteIds = new HashSet<>();
 
     @Nullable
     @Override
@@ -70,6 +50,9 @@ public class HomeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        viewModel = new ViewModelProvider(this).get(HomeViewModel.class);
+
+        // ── Navegación ──────────────────────────────────────────────────────
         view.findViewById(R.id.etSearch).setOnClickListener(v ->
                 Navigation.findNavController(requireActivity(), R.id.nav_host_fragment)
                         .navigate(R.id.action_home_to_search)
@@ -80,90 +63,41 @@ public class HomeFragment extends Fragment {
                         .navigate(R.id.action_home_to_news)
         );
 
-        // Saludo
+        // ── Saludo ──────────────────────────────────────────────────────────
         String username = getArguments() != null ? getArguments().getString("username", "") : "";
         TextView tvGreeting = view.findViewById(R.id.tvGreeting);
         if (!username.isEmpty()) tvGreeting.setText("Hola, " + username + " 👋");
 
-        // Cargar favoritos del usuario primero y luego renderizar las secciones
-        String email = tokenManager.getEmail();
-        Executors.newSingleThreadExecutor().execute(() -> {
-            List<CachedFavorite> favs = cachedFavoriteDao.getByEmail(email);
-            favoriteIds.clear();
-            for (CachedFavorite f : favs) favoriteIds.add(f.activityId);
-
-            if (!isAdded()) return;
-            requireActivity().runOnUiThread(() -> {
-                loadMostVisited(view);
-                loadRecommended(view);
-                loadTopRated(view);
-                loadNews(view);
-            });
+        // ── Observadores LiveData ────────────────────────────────────────────
+        viewModel.favoriteIds.observe(getViewLifecycleOwner(), ids -> {
+            localFavoriteIds = ids != null ? ids : new HashSet<>();
         });
+
+        viewModel.mostVisited.observe(getViewLifecycleOwner(), activities -> {
+            if (activities != null) renderCards(view, R.id.llMostVisited, activities);
+        });
+
+        viewModel.recommended.observe(getViewLifecycleOwner(), activities -> {
+            if (activities != null) renderCards(view, R.id.llRecomendadas, activities);
+        });
+
+        viewModel.topRated.observe(getViewLifecycleOwner(), activities -> {
+            if (activities != null) renderCards(view, R.id.llTopRated, activities);
+        });
+
+        viewModel.news.observe(getViewLifecycleOwner(), newsList -> {
+            if (newsList != null) renderNewsCards(view, newsList);
+        });
+
+        viewModel.error.observe(getViewLifecycleOwner(), msg -> {
+            if (msg != null) Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+        });
+
+        // ── Carga de datos ───────────────────────────────────────────────────
+        viewModel.loadAll();
     }
 
-    private void loadMostVisited(View root) {
-        activityApiService.getMostVisited().enqueue(new Callback<List<ActivityDto>>() {
-            @Override
-            public void onResponse(@NonNull Call<List<ActivityDto>> call,
-                                   @NonNull Response<List<ActivityDto>> response) {
-                if (!isAdded()) return;
-                if (response.isSuccessful() && response.body() != null) {
-                    renderCards(root, R.id.llMostVisited, response.body());
-                } else {
-                    Toast.makeText(requireContext(), "Error cargando destinos", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<List<ActivityDto>> call, @NonNull Throwable t) {
-                if (!isAdded()) return;
-                Toast.makeText(requireContext(), "Error de red", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void loadRecommended(View root) {
-        activityApiService.getRecommendations().enqueue(new Callback<List<ActivityDto>>() {
-            @Override
-            public void onResponse(@NonNull Call<List<ActivityDto>> call,
-                                   @NonNull Response<List<ActivityDto>> response) {
-                if (!isAdded()) return;
-                if (response.isSuccessful() && response.body() != null) {
-                    renderCards(root, R.id.llRecomendadas, response.body());
-                } else {
-                    Toast.makeText(requireContext(), "Error cargando recomendaciones", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<List<ActivityDto>> call, @NonNull Throwable t) {
-                if (!isAdded()) return;
-                Toast.makeText(requireContext(), "Error de red", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void loadTopRated(View root) {
-        activityApiService.getTopRated().enqueue(new Callback<List<ActivityDto>>() {
-            @Override
-            public void onResponse(@NonNull Call<List<ActivityDto>> call,
-                                   @NonNull Response<List<ActivityDto>> response) {
-                if (!isAdded()) return;
-                if (response.isSuccessful() && response.body() != null) {
-                    renderCards(root, R.id.llTopRated, response.body());
-                } else {
-                    Toast.makeText(requireContext(), "Error cargando mejores puntuadas", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<List<ActivityDto>> call, @NonNull Throwable t) {
-                if (!isAdded()) return;
-                Toast.makeText(requireContext(), "Error de red", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
+    // ─── Renderizado de cards de actividades ──────────────────────────────────
 
     private void renderCards(View root, int containerId, List<ActivityDto> activities) {
         LinearLayout container = root.findViewById(containerId);
@@ -173,7 +107,6 @@ public class HomeFragment extends Fragment {
         for (ActivityDto activity : activities) {
             View card = inflater.inflate(R.layout.item_category_card, container, false);
 
-            // Título
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     dpToPx(180), dpToPx(220));
             params.setMarginEnd(dpToPx(12));
@@ -207,7 +140,7 @@ public class HomeFragment extends Fragment {
             tvPrice.setText(activity.getPrice() != null
                     ? String.format(Locale.getDefault(), "$%.0f", activity.getPrice()) : "Gratis");
 
-            // Cupos disponibles (suma de disponibilidades futuras)
+            // Cupos disponibles
             TextView tvQuota = card.findViewById(R.id.tvCardQuota);
             Integer availableQuota = getAvailableQuota(activity);
             tvQuota.setText(availableQuota != null ? availableQuota + " cupos" : "Sin cupos");
@@ -231,15 +164,24 @@ public class HomeFragment extends Fragment {
                 imageView.setImageResource(R.drawable.bg_hero_landscape);
             }
 
-            // Click → detalle
             // Corazón de favorito
             ImageButton btnFav = card.findViewById(R.id.btnFavorite);
-            boolean isFav = activity.getId() != null && favoriteIds.contains(activity.getId());
+            boolean isFav = activity.getId() != null && localFavoriteIds.contains(activity.getId());
             btnFav.setImageResource(isFav ? R.drawable.ic_favorite_filled : R.drawable.ic_favorite_border);
 
             final String finalImageUrl = imageUrl;
-            btnFav.setOnClickListener(v -> toggleFavorite(activity, btnFav, finalImageUrl));
+            btnFav.setOnClickListener(v -> {
+                // Actualización visual inmediata (UI optimista)
+                boolean isFavNow = activity.getId() != null
+                        && localFavoriteIds.contains(activity.getId());
+                btnFav.setImageResource(isFavNow
+                        ? R.drawable.ic_favorite_border
+                        : R.drawable.ic_favorite_filled);
+                // Delegar lógica al ViewModel
+                viewModel.toggleFavorite(activity, finalImageUrl);
+            });
 
+            // Click → detalle de actividad
             card.setOnClickListener(v -> {
                 Bundle args = new Bundle();
                 args.putLong("activityId", activity.getId() == null ? -1L : activity.getId());
@@ -252,50 +194,7 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private void toggleFavorite(ActivityDto activity, ImageButton btnFav, String imageUrl) {
-        if (activity.getId() == null) return;
-        long id = activity.getId();
-        String email = tokenManager.getEmail();
-        boolean isFav = favoriteIds.contains(id);
-
-        if (isFav) {
-            favoriteIds.remove(id);
-            btnFav.setImageResource(R.drawable.ic_favorite_border);
-            Executors.newSingleThreadExecutor().execute(() ->
-                    cachedFavoriteDao.delete(id, email));
-        } else {
-            favoriteIds.add(id);
-            btnFav.setImageResource(R.drawable.ic_favorite_filled);
-            Executors.newSingleThreadExecutor().execute(() -> {
-                CachedFavorite fav = new CachedFavorite(
-                        id, email,
-                        activity.getTitle(),
-                        activity.getPrice(),
-                        activity.getRating(),
-                        activity.getCategory(),
-                        activity.getUbicationName(),
-                        imageUrl
-                );
-                cachedFavoriteDao.insert(fav);
-            });
-        }
-    }
-
-    private void loadNews(View root) {
-        newsApiService.getNews().enqueue(new Callback<List<NewsDto>>() {
-            @Override
-            public void onResponse(@NonNull Call<List<NewsDto>> call,
-                                   @NonNull Response<List<NewsDto>> response) {
-                if (!isAdded()) return;
-                if (response.isSuccessful() && response.body() != null) {
-                    renderNewsCards(root, response.body());
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<List<NewsDto>> call, @NonNull Throwable t) { }
-        });
-    }
+    // ─── Renderizado de cards de noticias ─────────────────────────────────────
 
     private void renderNewsCards(View root, List<NewsDto> newsList) {
         LinearLayout container = root.findViewById(R.id.llNews);
@@ -344,6 +243,8 @@ public class HomeFragment extends Fragment {
             container.addView(card);
         }
     }
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
 
     private int dpToPx(int dp) {
         return Math.round(dp * getResources().getDisplayMetrics().density);
