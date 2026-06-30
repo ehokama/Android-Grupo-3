@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
                 setupNotifications();
             }
 
-            handleVoucherDeepLink(getIntent());
+            handleNotificationDeepLink(getIntent());
 
             navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
                 int id = destination.getId();
@@ -123,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        handleVoucherDeepLink(intent);
+        handleNotificationDeepLink(intent);
     }
 
     private void setupNotifications() {
@@ -139,17 +139,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void handleVoucherDeepLink(Intent intent) {
+    private void handleNotificationDeepLink(Intent intent) {
         if (intent == null || navController == null) return;
-        if (!NotificationPollingService.ACTION_OPEN_VOUCHER.equals(intent.getAction())) return;
+        if (!NotificationPollingService.ACTION_OPEN_HISTORY.equals(intent.getAction())) return;
 
-        long reserveId = intent.getLongExtra(
-                NotificationPollingService.EXTRA_OPEN_VOUCHER_RESERVE_ID, -1);
-        if (reserveId <= 0) return;
-
-        Bundle args = new Bundle();
-        args.putLong("reserveId", reserveId);
-        navController.navigate(R.id.voucherFragment, args);
+        navController.navigate(R.id.historyFragment);
         intent.setAction(null);
     }
 

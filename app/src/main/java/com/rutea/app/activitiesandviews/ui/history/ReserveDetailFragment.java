@@ -13,7 +13,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-import androidx.navigation.Navigation;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
@@ -51,7 +50,6 @@ public class ReserveDetailFragment extends Fragment {
     private LinearLayout starsActivityInput, starsGuideInput;
     private TextInputEditText etComment;
     private MaterialButton btnSubmitReview;
-    private MaterialButton btnViewVoucher;
 
     private int selectedActivityRating = 0;
     private int selectedGuideRating    = 0;
@@ -122,7 +120,6 @@ public class ReserveDetailFragment extends Fragment {
         starsGuideInput      = view.findViewById(R.id.starsGuideInput);
         etComment            = view.findViewById(R.id.etComment);
         btnSubmitReview      = view.findViewById(R.id.btnSubmitReview);
-        btnViewVoucher       = view.findViewById(R.id.btnViewVoucher);
 
         Bundle args = getArguments();
         if (args == null) return;
@@ -157,18 +154,6 @@ public class ReserveDetailFragment extends Fragment {
         tvDetailPrice.setText(String.format(Locale.getDefault(), "$%.2f", price));
 
         bindStateChip(state);
-
-        if ("CONFIRMED".equals(state) || "COMPLETED".equals(state)) {
-            btnViewVoucher.setVisibility(View.VISIBLE);
-            btnViewVoucher.setOnClickListener(v -> {
-                Bundle voucherArgs = new Bundle();
-                voucherArgs.putLong("reserveId", idReserve);
-                Navigation.findNavController(v).navigate(
-                        R.id.action_reserveDetail_to_voucher, voucherArgs);
-            });
-        } else {
-            btnViewVoucher.setVisibility(View.GONE);
-        }
 
         if (imgUrl != null) {
             Glide.with(this)
