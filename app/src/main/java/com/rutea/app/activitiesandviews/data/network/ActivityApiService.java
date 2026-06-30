@@ -39,13 +39,13 @@ public interface ActivityApiService {
             @Query("size") Integer size
     );
 
-    @GET("/api/activities/most-visited")
+    @GET("api/activities/most-visited")
     Call<List<ActivityDto>> getMostVisited();
 
-    @GET("/api/activities/top-rated")
+    @GET("api/activities/top-rated")
     Call<List<ActivityDto>> getTopRated();
 
-    @GET("/api/activities/recommendations")
+    @GET("api/activities/recommendations")
     Call<List<ActivityDto>> getRecommendations();
 
 }

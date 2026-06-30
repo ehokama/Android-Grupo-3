@@ -85,8 +85,7 @@ public class ReserveDetailFragment extends Fragment {
         // Imagen: primera URL si existe
         String imageUrl = null;
         if (reserve.getActivityImages() != null && !reserve.getActivityImages().isEmpty()) {
-            Long imgId = reserve.getActivityImages().get(0).getIdImage();
-            imageUrl = "http://10.0.2.2:8080/api/images/" + imgId + "/raw";
+            imageUrl = reserve.getActivityImages().get(0).getUrl();
         }
         b.putString("imageUrl", imageUrl);
 
