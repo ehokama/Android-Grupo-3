@@ -60,7 +60,7 @@ public class ActivityRepository {
 
             @Override
             public void onFailure(Call<List<ActivityDto>> call, Throwable t) {
-                error.postValue("Error de red");
+                error.postValue("No se pudieron cargar los destinos. Revisá tu conexión.");
             }
         });
     }
@@ -80,7 +80,7 @@ public class ActivityRepository {
 
             @Override
             public void onFailure(Call<List<ActivityDto>> call, Throwable t) {
-                error.postValue("Error de red");
+                error.postValue("No se pudieron cargar las recomendaciones. Revisá tu conexión.");
             }
         });
     }
@@ -100,7 +100,7 @@ public class ActivityRepository {
 
             @Override
             public void onFailure(Call<List<ActivityDto>> call, Throwable t) {
-                error.postValue("Error de red");
+                error.postValue("No se pudieron cargar las mejor puntuadas. Revisá tu conexión.");
             }
         });
     }

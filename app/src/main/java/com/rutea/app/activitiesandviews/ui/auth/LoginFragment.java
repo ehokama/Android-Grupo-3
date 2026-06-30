@@ -99,9 +99,8 @@ public class LoginFragment extends Fragment {
 
         setupClickListeners();
 
-        // Si el usuario activó biometría en un login previo, saltar directo al prompt
         if (tokenManager.isBiometricEnabled()) {
-            showBiometricPrompt();
+            prepararPantallaBiometrica();
         } else {
             showCredentialForm();
         }
@@ -117,12 +116,7 @@ public class LoginFragment extends Fragment {
         updateUI(LoginMode.PASSWORD);
     }
 
-    private void showBiometricPrompt() {
-        layoutCredentials.setVisibility(View.GONE);
-        layoutBiometric.setVisibility(View.VISIBLE);
-        tvBiometricStatus.setText("Verificando identidad...");
-
-        // Siempre verificar disponibilidad del hardware antes de lanzar el prompt
+    private void prepararPantallaBiometrica() {
         BiometricManager manager = BiometricManager.from(requireContext());
         int canAuth = manager.canAuthenticate(ALLOWED_AUTHENTICATORS);
 
@@ -146,6 +140,15 @@ public class LoginFragment extends Fragment {
             return;
         }
 
+        layoutCredentials.setVisibility(View.GONE);
+        layoutBiometric.setVisibility(View.VISIBLE);
+        tvBiometricStatus.setText("Usá tu huella digital o PIN para ingresar a tu cuenta");
+
+        View btnLanzarBiometria = requireView().findViewById(R.id.btnLanzarBiometria);
+        btnLanzarBiometria.setOnClickListener(v -> lanzarPromptBiometrico());
+    }
+
+    private void lanzarPromptBiometrico() {
         BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
                 .setTitle("Bienvenido de nuevo")
                 .setSubtitle("Confirmá tu identidad para ingresar")
@@ -158,7 +161,6 @@ public class LoginFragment extends Fragment {
                     @Override
                     public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
                         super.onAuthenticationSucceeded(result);
-                        // Recuperar el token cifrado y restaurar la sesión
                         String token = tokenManager.getEncryptedToken();
                         String email = tokenManager.getEmail();
                         String name = tokenManager.getName();
@@ -173,13 +175,11 @@ public class LoginFragment extends Fragment {
                     @Override
                     public void onAuthenticationFailed() {
                         super.onAuthenticationFailed();
-                        // El sistema ya muestra feedback visual; no se requiere acción aquí
                     }
 
                     @Override
                     public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
                         super.onAuthenticationError(errorCode, errString);
-                        // Error terminal o cancelación por el usuario: caer al formulario
                         showCredentialForm();
                     }
                 });
@@ -311,7 +311,7 @@ public class LoginFragment extends Fragment {
             @Override
             public void onFailure(@NonNull Call<AuthResponse> call, @NonNull Throwable t) {
                 setLoading(false);
-                Toast.makeText(requireContext(), "Error de red", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "No se pudo iniciar sesión. Revisá tu conexión e intentá de nuevo.", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -373,7 +373,7 @@ public class LoginFragment extends Fragment {
             @Override
             public void onFailure(@NonNull Call<AuthResponse> call, @NonNull Throwable t) {
                 setLoading(false);
-                Toast.makeText(requireContext(), "Error de red", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "No se pudo verificar el código. Revisá tu conexión e intentá de nuevo.", Toast.LENGTH_SHORT).show();
             }
         });
     }
