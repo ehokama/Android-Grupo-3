@@ -29,7 +29,6 @@ import com.rutea.app.activitiesandviews.data.models.dto.auth.AuthResponse;
 import com.rutea.app.activitiesandviews.data.models.dto.auth.OtpRequest;
 import com.rutea.app.activitiesandviews.data.models.dto.auth.OtpVerificationRequest;
 import com.rutea.app.activitiesandviews.data.network.AuthApiService;
-import com.rutea.app.activitiesandviews.ui.MainActivity;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -389,9 +388,6 @@ public class LoginFragment extends Fragment {
     // -------------------------------------------------------------------------
 
     private void goToHome(String username) {
-        if (requireActivity() instanceof MainActivity) {
-            ((MainActivity) requireActivity()).onUserLoggedIn();
-        }
         Bundle args = new Bundle();
         args.putString("username", username);
         Navigation.findNavController(requireView()).navigate(R.id.action_auth_to_home, args);
