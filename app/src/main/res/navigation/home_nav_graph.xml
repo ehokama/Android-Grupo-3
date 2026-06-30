@@ -49,6 +49,9 @@
         android:name="com.rutea.app.activitiesandviews.ui.history.ReserveDetailFragment"
         android:label="Reservation Detail"
         tools:layout="@layout/fragment_reserve_detail">
+        <action
+            android:id="@+id/action_reserveDetail_to_voucher"
+            app:destination="@id/voucherFragment" />
     </fragment>
 
     <fragment
@@ -138,6 +141,30 @@
         <action
             android:id="@+id/action_news_detail_to_reservation"
             app:destination="@id/reservationFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/voucherFragment"
+        android:name="com.rutea.app.activitiesandviews.ui.voucher.VoucherFragment"
+        android:label="Voucher Digital"
+        tools:layout="@layout/fragment_voucher">
+        <argument
+            android:name="reserveId"
+            app:argType="long" />
+        <action
+            android:id="@+id/action_voucher_to_qrCheckIn"
+            app:destination="@id/qrCheckInFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/qrCheckInFragment"
+        android:name="com.rutea.app.activitiesandviews.ui.voucher.QrCheckInFragment"
+        android:label="Check-in QR"
+        tools:layout="@layout/fragment_qr_check_in">
+        <argument
+            android:name="reserveId"
+            app:argType="long"
+            android:defaultValue="-1L" />
     </fragment>
 
 </navigation>

@@ -223,6 +223,16 @@
                     android:textColor="?attr/colorPrimary" />
             </LinearLayout>
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnViewVoucher"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:text="Ver voucher digital"
+                android:visibility="gone"
+                app:icon="@android:drawable/ic_menu_view" />
+
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
