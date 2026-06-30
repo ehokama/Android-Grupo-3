@@ -49,7 +49,6 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityResultLauncher<String> notifPermissionLauncher;
 
-    // Receptor que escucha cuando el token expira en cualquier parte de la app
     private final BroadcastReceiver sessionExpiredReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -87,7 +86,6 @@ public class MainActivity extends AppCompatActivity {
 
             NavigationUI.setupWithNavController(bottomNavigationView, navController);
 
-            // Si ya hay un token guardado, saltar directamente al Home
             if (tokenManager.hasToken()) {
                 NavOptions navOptions = new NavOptions.Builder()
                         .setPopUpTo(R.id.auth_nav_graph, true)
@@ -113,7 +111,6 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        // Registrar el receptor para escuchar sesiones expiradas
         IntentFilter filter = new IntentFilter(NetworkModule.ACTION_SESSION_EXPIRED);
         registerReceiver(sessionExpiredReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
         observeConnectivity();

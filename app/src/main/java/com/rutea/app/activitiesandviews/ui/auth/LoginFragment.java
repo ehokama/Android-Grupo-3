@@ -30,7 +30,6 @@ import com.rutea.app.activitiesandviews.data.models.dto.auth.OtpRequest;
 import com.rutea.app.activitiesandviews.data.models.dto.auth.OtpVerificationRequest;
 import com.rutea.app.activitiesandviews.data.network.AuthApiService;
 import com.rutea.app.activitiesandviews.ui.MainActivity;
-import com.rutea.app.activitiesandviews.ui.MainActivity;
 
 import retrofit2.Call;
 import retrofit2.Callback;
