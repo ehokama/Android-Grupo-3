@@ -2,6 +2,8 @@ package com.rutea.app.activitiesandviews.ui;
 
 import com.rutea.app.R;
 import android.content.BroadcastReceiver;
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -14,7 +16,10 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
 import androidx.navigation.fragment.NavHostFragment;
@@ -22,6 +27,10 @@ import androidx.navigation.ui.NavigationUI;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.rutea.app.activitiesandviews.data.local.TokenManager;
 import com.rutea.app.activitiesandviews.di.NetworkModule;
+import com.rutea.app.activitiesandviews.service.NotificationPollingService;
+import com.rutea.app.activitiesandviews.util.NotificationHelper;
+
+import android.os.Build;
 
 import javax.inject.Inject;
 import dagger.hilt.android.AndroidEntryPoint;
@@ -37,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvOfflineBanner;
     private ConnectivityManager connectivityManager;
     private ConnectivityManager.NetworkCallback networkCallback;
+
+    private ActivityResultLauncher<String> notifPermissionLauncher;
 
     // Receptor que escucha cuando el token expira en cualquier parte de la app
     private final BroadcastReceiver sessionExpiredReceiver = new BroadcastReceiver() {
@@ -57,6 +68,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        notifPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                granted -> {
+                    if (granted && tokenManager.hasToken()) {
+                        NotificationHelper.startPollingService(this);
+                    }
+                });
+
         bottomNavigationView = findViewById(R.id.bottom_nav_view);
         tvOfflineBanner = findViewById(R.id.tvOfflineBanner);
 
@@ -74,7 +93,10 @@ public class MainActivity extends AppCompatActivity {
                         .setPopUpTo(R.id.auth_nav_graph, true)
                         .build();
                 navController.navigate(R.id.home_nav_graph, null, navOptions);
+                setupNotifications();
             }
+
+            handleVoucherDeepLink(getIntent());
 
             navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
                 int id = destination.getId();
@@ -95,6 +117,44 @@ public class MainActivity extends AppCompatActivity {
         IntentFilter filter = new IntentFilter(NetworkModule.ACTION_SESSION_EXPIRED);
         registerReceiver(sessionExpiredReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
         observeConnectivity();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleVoucherDeepLink(intent);
+    }
+
+    private void setupNotifications() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    == PackageManager.PERMISSION_GRANTED) {
+                NotificationHelper.startPollingService(this);
+            } else {
+                notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+            }
+        } else {
+            NotificationHelper.startPollingService(this);
+        }
+    }
+
+    private void handleVoucherDeepLink(Intent intent) {
+        if (intent == null || navController == null) return;
+        if (!NotificationPollingService.ACTION_OPEN_VOUCHER.equals(intent.getAction())) return;
+
+        long reserveId = intent.getLongExtra(
+                NotificationPollingService.EXTRA_OPEN_VOUCHER_RESERVE_ID, -1);
+        if (reserveId <= 0) return;
+
+        Bundle args = new Bundle();
+        args.putLong("reserveId", reserveId);
+        navController.navigate(R.id.voucherFragment, args);
+        intent.setAction(null);
+    }
+
+    public void onUserLoggedIn() {
+        setupNotifications();
     }
 
     @Override
