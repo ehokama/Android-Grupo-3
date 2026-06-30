@@ -10,6 +10,7 @@ import com.rutea.app.activitiesandviews.data.network.DisponibilityApiService;
 import com.rutea.app.activitiesandviews.data.network.NewsApiService;
 import com.rutea.app.activitiesandviews.data.network.NotificationApiService;
 import com.rutea.app.activitiesandviews.data.network.ReserveApiService;
+import com.rutea.app.activitiesandviews.data.network.VoucherApiService;
 import com.rutea.app.activitiesandviews.data.network.ReviewApiService;
 import com.rutea.app.activitiesandviews.data.network.TravellerApiService;
 import com.rutea.app.activitiesandviews.data.local.TokenManager;
@@ -155,5 +156,11 @@ public class NetworkModule {
     @Singleton
     public NotificationApiService provideNotificationApiService(Retrofit retrofit) {
         return retrofit.create(NotificationApiService.class);
+    }
+
+    @Provides
+    @Singleton
+    public VoucherApiService provideVoucherApiService(Retrofit retrofit) {
+        return retrofit.create(VoucherApiService.class);
     }
 }
