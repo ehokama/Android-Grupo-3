@@ -63,9 +63,6 @@
         <action
             android:id="@+id/action_historyFragment_to_reserveDetailFragment"
             app:destination="@id/reserveDetailFragment" />
-        <action
-            android:id="@+id/action_history_to_voucher"
-            app:destination="@id/voucherFragment" />
     </fragment>
 
     <fragment
