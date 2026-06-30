@@ -8,10 +8,11 @@ import com.rutea.app.activitiesandviews.data.network.ActivityApiService;
 import com.rutea.app.activitiesandviews.data.network.AuthApiService;
 import com.rutea.app.activitiesandviews.data.network.DisponibilityApiService;
 import com.rutea.app.activitiesandviews.data.network.NewsApiService;
+import com.rutea.app.activitiesandviews.data.network.NotificationApiService;
 import com.rutea.app.activitiesandviews.data.network.ReserveApiService;
+import com.rutea.app.activitiesandviews.data.network.VoucherApiService;
 import com.rutea.app.activitiesandviews.data.network.ReviewApiService;
 import com.rutea.app.activitiesandviews.data.network.TravellerApiService;
-import com.rutea.app.activitiesandviews.data.network.VoucherApiService;
 import com.rutea.app.activitiesandviews.data.local.TokenManager;
 import com.rutea.app.activitiesandviews.data.network.UbicationApiService;
 
@@ -149,6 +150,12 @@ public class NetworkModule {
     @Singleton
     public UbicationApiService provideUbicationApiService(Retrofit retrofit) {
         return retrofit.create(UbicationApiService.class);
+    }
+
+    @Provides
+    @Singleton
+    public NotificationApiService provideNotificationApiService(Retrofit retrofit) {
+        return retrofit.create(NotificationApiService.class);
     }
 
     @Provides
