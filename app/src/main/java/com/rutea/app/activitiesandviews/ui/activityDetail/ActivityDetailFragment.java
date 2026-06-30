@@ -43,9 +43,6 @@ import javax.inject.Inject;
 @AndroidEntryPoint
 public class ActivityDetailFragment extends Fragment {
 
-    // Base URL for image raw endpoint (must match NetworkModule)
-    private static final String IMAGE_BASE_URL = "http://10.0.2.2:8080/api/images/";
-
     @Inject
     ActivityApiService activityApiService;
 
@@ -168,9 +165,8 @@ public class ActivityDetailFragment extends Fragment {
                     // Load hero image from backend
                     List<ImageDto> images = dto.getImages();
                     if (images != null && !images.isEmpty()) {
-                        Long imageId = images.get(0).getIdImage();
-                        if (imageId != null) {
-                            String imageUrl = IMAGE_BASE_URL + imageId + "/raw";
+                        String imageUrl = images.get(0).getUrl();
+                        if (imageUrl != null) {
                             Glide.with(ActivityDetailFragment.this)
                                     .load(imageUrl)
                                     .centerCrop()
@@ -249,8 +245,8 @@ public class ActivityDetailFragment extends Fragment {
                 String imageUrl = "";
                 if (loadedActivity != null && loadedActivity.getImages() != null
                         && !loadedActivity.getImages().isEmpty()) {
-                    Long imgId = loadedActivity.getImages().get(0).getIdImage();
-                    imageUrl = "http://10.0.2.2:8080/api/images/" + imgId + "/raw";
+                    String url = loadedActivity.getImages().get(0).getUrl();
+                    imageUrl = url != null ? url : "";
                 }
                 CachedFavorite fav = new CachedFavorite(
                         activityId, email,
@@ -278,8 +274,8 @@ public class ActivityDetailFragment extends Fragment {
         List<String> urls = new ArrayList<>();
         if (images == null) return urls;
         for (ImageDto img : images) {
-            if (img != null && img.getIdImage() != null) {
-                urls.add(IMAGE_BASE_URL + img.getIdImage() + "/raw");
+            if (img != null && img.getUrl() != null) {
+                urls.add(img.getUrl());
             }
         }
         return urls;

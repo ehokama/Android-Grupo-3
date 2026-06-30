@@ -216,13 +216,17 @@ public class HomeFragment extends Fragment {
             ImageView imageView = card.findViewById(R.id.ivCard);
             String imageUrl = "";
             if (activity.getImages() != null && !activity.getImages().isEmpty()) {
-                Long imageId = activity.getImages().get(0).getIdImage();
-                imageUrl = "http://10.0.2.2:8080/api/images/" + imageId + "/raw";
-                Glide.with(requireContext())
-                        .load(imageUrl)
-                        .placeholder(R.drawable.bg_hero_landscape)
-                        .error(R.drawable.bg_hero_landscape)
-                        .into(imageView);
+                String url = activity.getImages().get(0).getUrl();
+                if (url != null) {
+                    imageUrl = url;
+                    Glide.with(requireContext())
+                            .load(imageUrl)
+                            .placeholder(R.drawable.bg_hero_landscape)
+                            .error(R.drawable.bg_hero_landscape)
+                            .into(imageView);
+                } else {
+                    imageView.setImageResource(R.drawable.bg_hero_landscape);
+                }
             } else {
                 imageView.setImageResource(R.drawable.bg_hero_landscape);
             }
