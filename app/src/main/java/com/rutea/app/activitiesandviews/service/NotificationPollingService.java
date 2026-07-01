@@ -33,7 +33,7 @@ import com.google.gson.reflect.TypeToken;
 public class NotificationPollingService extends Service {
 
     private static final String TAG = "NotificationPolling";
-    private static final String BASE_URL = "https://xplorenow-api-production.up.railway.app/";
+    private static final String BASE_URL = "https://backendrutea-production.up.railway.app/";
     private static final int NOTIF_ID_FOREGROUND = 1001;
     private static final String CANAL_ID = "xplorenow_alerts";
     private static final String CANAL_NOMBRE = "Recordatorios y avisos";
