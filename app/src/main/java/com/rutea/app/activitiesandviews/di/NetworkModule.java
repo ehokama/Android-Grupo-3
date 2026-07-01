@@ -34,7 +34,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class NetworkModule {
 
     public static final String ACTION_SESSION_EXPIRED = "com.rutea.app.SESSION_EXPIRED";
-    private static final String BASE_URL = "https://xplorenow-api-production.up.railway.app/";
+    private static final String BASE_URL = "https://backendrutea-production.up.railway.app/";
     private static final String TAG = "NetworkModule";
 
     @Provides
