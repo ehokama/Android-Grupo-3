@@ -1,13 +1,19 @@
 package com.rutea.app.activitiesandviews.data.models.dto.voucher;
 
 public class CheckInRequest {
-    private final String qrPayload;
+    private final long reserveId;
+    private final boolean confirmed;
 
-    public CheckInRequest(String qrPayload) {
-        this.qrPayload = qrPayload;
+    public CheckInRequest(long reserveId, boolean confirmed) {
+        this.reserveId = reserveId;
+        this.confirmed = confirmed;
     }
 
-    public String getQrPayload() {
-        return qrPayload;
+    public long getReserveId() {
+        return reserveId;
+    }
+
+    public boolean isConfirmed() {
+        return confirmed;
     }
 }

@@ -51,6 +51,8 @@ import retrofit2.Response;
 public class QrCheckInFragment extends Fragment {
 
     private static final String TAG = "QrCheckInFragment";
+    private static final String ARG_RESERVE_ID = "reserveId";
+    private static final String QR_CHECK_IN_VALUE = "true";
 
     @Inject VoucherApiService voucherApiService;
 
@@ -65,6 +67,7 @@ public class QrCheckInFragment extends Fragment {
     private ActivityResultLauncher<String> requestPermissionLauncher;
     private final AtomicBoolean processing = new AtomicBoolean(false);
     private final AtomicBoolean scanLocked = new AtomicBoolean(false);
+    private long reserveId = -1;
 
     public QrCheckInFragment() {
         super(R.layout.fragment_qr_check_in);
@@ -105,6 +108,12 @@ public class QrCheckInFragment extends Fragment {
         progressScan = view.findViewById(R.id.progressScan);
 
         btnScanAgain.setOnClickListener(v -> resetScan());
+
+        reserveId = getArguments() != null ? getArguments().getLong(ARG_RESERVE_ID, -1) : -1;
+        if (reserveId <= 0) {
+            Toast.makeText(requireContext(), "Reserva no válida", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         pedirPermisoCamara();
     }
@@ -172,6 +181,14 @@ public class QrCheckInFragment extends Fragment {
 
     private void procesarQr(String rawValue) {
         if (!processing.compareAndSet(false, true)) return;
+
+        if (!QR_CHECK_IN_VALUE.equalsIgnoreCase(rawValue.trim())) {
+            processing.set(false);
+            requireActivity().runOnUiThread(() ->
+                    mostrarError("QR inválido: se esperaba confirmación de check-in."));
+            return;
+        }
+
         scanLocked.set(true);
 
         requireActivity().runOnUiThread(() -> {
@@ -179,7 +196,7 @@ public class QrCheckInFragment extends Fragment {
             tvScanHint.setVisibility(View.GONE);
         });
 
-        voucherApiService.checkIn(new CheckInRequest(rawValue))
+        voucherApiService.checkIn(new CheckInRequest(reserveId, true))
                 .enqueue(new Callback<CheckInResponse>() {
                     @Override
                     public void onResponse(@NonNull Call<CheckInResponse> call,

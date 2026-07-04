@@ -33,7 +33,7 @@
                 android:id="@+id/tvScanHint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Apuntá la cámara al código QR del guía"
+                android:text="Apuntá la cámara al QR de check-in del guía"
                 android:textAlignment="center" />
 
             <TextView
