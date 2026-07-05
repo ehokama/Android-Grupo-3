@@ -72,6 +72,9 @@ dependencies {
     implementation(libs.lifecycle.viewmodel)
     implementation(libs.lifecycle.livedata)
 
+    // Splash Screen API
+    implementation(libs.splashscreen)
+
     // CameraX + ML Kit (voucher QR check-in)
     implementation(libs.camera.core)
     implementation(libs.camera.camera2)
