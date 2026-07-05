@@ -22,13 +22,18 @@
         android:theme="@style/Theme.XplorerNow">
 
         <activity
-            android:name=".activitiesandviews.ui.MainActivity"
-            android:exported="true">
+            android:name=".activitiesandviews.ui.SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".activitiesandviews.ui.MainActivity"
+            android:exported="false" />
 
         <service
             android:name=".activitiesandviews.service.NotificationPollingService"
