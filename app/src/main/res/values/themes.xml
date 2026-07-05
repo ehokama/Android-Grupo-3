@@ -7,11 +7,9 @@
 
     <style name="Theme.XplorerNow" parent="Base.Theme.XplorerNow" />
 
-    <style name="Theme.Splash" parent="Theme.Material3.Light.NoActionBar">
-        <item name="android:windowBackground">#FFFFFF</item>
-        <item name="android:statusBarColor">#FFFFFF</item>
-        <item name="android:navigationBarColor">#FFFFFF</item>
-        <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLightNavigationBar">true</item>
+    <style name="Theme.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#FFFFFF</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_iso</item>
+        <item name="postSplashScreenTheme">@style/Theme.XplorerNow</item>
     </style>
 </resources>
