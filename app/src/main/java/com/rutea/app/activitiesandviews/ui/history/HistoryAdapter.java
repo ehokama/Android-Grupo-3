@@ -127,8 +127,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.VH> {
 
 // ─── Imagen desde lista de imágenes de la actividad ───
             if (r.getActivityImages() != null && !r.getActivityImages().isEmpty()) {
-                Long imageId = r.getActivityImages().get(0).getIdImage();
-                String imageUrl = "http://10.0.2.2:8080/api/images/" + imageId + "/raw";
+                String imageUrl = r.getActivityImages().get(0).getUrl();
                 Glide.with(ivActivityImage.getContext())
                         .load(imageUrl)
                         .placeholder(R.drawable.bg_hero_landscape)

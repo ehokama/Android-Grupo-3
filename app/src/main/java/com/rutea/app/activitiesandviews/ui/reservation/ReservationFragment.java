@@ -246,6 +246,12 @@ public class ReservationFragment extends Fragment {
             return;
         }
 
+        btnConfirmar.setEnabled(false);
+        List<String> loadingPlaceholder = new ArrayList<>();
+        loadingPlaceholder.add("Cargando...");
+        spinnerFecha.setAdapter(simpleAdapter(loadingPlaceholder));
+        spinnerHorario.setAdapter(simpleAdapter(loadingPlaceholder));
+
         disponibilityApiService.getDisponibilities().enqueue(new Callback<List<DisponibilityDto>>() {
             @Override
             public void onResponse(@NonNull Call<List<DisponibilityDto>> call, @NonNull Response<List<DisponibilityDto>> response) {
@@ -286,7 +292,7 @@ public class ReservationFragment extends Fragment {
                 // Trigger an initial update for the times spinner
                 if (!availableDates.isEmpty()) {
                     updateTimeSpinner(0);
-                    btnConfirmar.setEnabled(true);
+                    checkExistingReservation();
                 }
             }
 
@@ -296,6 +302,36 @@ public class ReservationFragment extends Fragment {
                     return;
                 }
                 Toast.makeText(requireContext(), "Error de red al cargar disponibilidades.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void checkExistingReservation() {
+        reserveApiService.getMyHistory().enqueue(new Callback<List<ReserveDto>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<ReserveDto>> call,
+                                   @NonNull Response<List<ReserveDto>> response) {
+                if (!isAdded() || !response.isSuccessful() || response.body() == null) {
+                    btnConfirmar.setEnabled(true);
+                    return;
+                }
+                boolean hasActive = response.body().stream()
+                        .anyMatch(r -> r.getActivityId() != null
+                                && r.getActivityId() == activityId
+                                && r.getState() != null
+                                && !r.getState().equalsIgnoreCase("CANCELLED"));
+                if (hasActive) {
+                    btnConfirmar.setEnabled(false);
+                    btnConfirmar.setText("Ya tenés una reserva para esta actividad");
+                } else {
+                    btnConfirmar.setEnabled(true);
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<List<ReserveDto>> call, @NonNull Throwable t) {
+                // Si falla la consulta, se habilita igual — el backend lo valida de todas formas
+                btnConfirmar.setEnabled(true);
             }
         });
     }
@@ -343,8 +379,19 @@ public class ReservationFragment extends Fragment {
             }
             String raw = errorBody.string();
             JSONObject json = new JSONObject(raw);
-            if (json.has("error")) {
-                return json.getString("error");
+            String errorMsg = null;
+            if (json.has("message")) {
+                errorMsg = json.getString("message");
+            } else if (json.has("error")) {
+                errorMsg = json.getString("error");
+            }
+            if (errorMsg != null) {
+                // Hide raw internal Java exceptions
+                if (errorMsg.contains("com.rutea") || errorMsg.contains("Cannot invoke")
+                        || errorMsg.contains("NullPointerException")) {
+                    return "No se pudo completar la reserva. Intentá de nuevo más tarde.";
+                }
+                return errorMsg;
             }
             return "Error " + response.code() + " al crear reserva.";
         } catch (IOException ioe) {
