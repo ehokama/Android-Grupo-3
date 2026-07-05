@@ -23,6 +23,8 @@ import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.signature.ObjectKey;
 import com.rutea.app.R;
 import com.rutea.app.activitiesandviews.data.local.TokenManager;
 import com.rutea.app.activitiesandviews.data.local.db.CachedProfile;
@@ -231,6 +233,9 @@ public class ProfileFragment extends Fragment {
         if (file.exists()) {
             Glide.with(this)
                     .load(file)
+                    .signature(new ObjectKey(file.lastModified()))
+                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+                    .skipMemoryCache(true)
                     .circleCrop()
                     .into(ivProfile);
         } else {
