@@ -63,9 +63,8 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
                     ? String.format(Locale.getDefault(), "$%.0f", a.getPrice()) : "Gratis");
 
             if (a.getImages() != null && !a.getImages().isEmpty()) {
-                Long imgId = a.getImages().get(0).getIdImage();
                 Glide.with(ivImage.getContext())
-                        .load("http://10.0.2.2:8080/api/images/" + imgId + "/raw")
+                        .load(a.getImages().get(0).getUrl())
                         .placeholder(R.drawable.bg_hero_landscape)
                         .error(R.drawable.bg_hero_landscape)
                         .centerCrop()

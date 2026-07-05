@@ -78,7 +78,7 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.ViewHolder> {
             return news.getImageUrl();
         }
         if (news.getImageId() != null) {
-            return "http://10.0.2.2:8080/api/images/" + news.getImageId() + "/raw";
+            return "https://backendrutea-production.up.railway.app/api/images/" + news.getImageId() + "/raw";
         }
         return null;
     }
