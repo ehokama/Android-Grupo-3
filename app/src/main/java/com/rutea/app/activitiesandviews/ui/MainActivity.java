@@ -138,10 +138,22 @@ public class MainActivity extends AppCompatActivity {
 
     private void handleNotificationDeepLink(Intent intent) {
         if (intent == null || navController == null) return;
-        if (!NotificationPollingService.ACTION_OPEN_HISTORY.equals(intent.getAction())) return;
+        String action = intent.getAction();
 
-        navController.navigate(R.id.historyFragment);
-        intent.setAction(null);
+        if (NotificationPollingService.ACTION_OPEN_VOUCHER.equals(action)) {
+            long reserveId = intent.getLongExtra(NotificationPollingService.EXTRA_RESERVE_ID, -1);
+            intent.setAction(null);
+            if (reserveId > 0) {
+                Bundle args = new Bundle();
+                args.putLong("reserveId", reserveId);
+                navController.navigate(R.id.voucherFragment, args);
+            } else {
+                navController.navigate(R.id.historyFragment);
+            }
+        } else if (NotificationPollingService.ACTION_OPEN_HISTORY.equals(action)) {
+            intent.setAction(null);
+            navController.navigate(R.id.historyFragment);
+        }
     }
 
     public void onUserLoggedIn() {
