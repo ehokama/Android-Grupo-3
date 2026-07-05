@@ -39,7 +39,9 @@ public class NotificationPollingService extends Service {
     private static final String CANAL_NOMBRE = "Recordatorios y avisos";
 
     public static final String EXTRA_OPEN_HISTORY = "open_history";
-    public static final String ACTION_OPEN_HISTORY = "com.rutea.app.OPEN_HISTORY";
+    public static final String ACTION_OPEN_HISTORY  = "com.rutea.app.OPEN_HISTORY";
+    public static final String ACTION_OPEN_VOUCHER  = "com.rutea.app.OPEN_VOUCHER";
+    public static final String EXTRA_RESERVE_ID     = "reserve_id";
 
     @Inject TokenManager tokenManager;
 
@@ -109,8 +111,13 @@ public class NotificationPollingService extends Service {
         int id = notifCounter.incrementAndGet();
 
         Intent intent = new Intent(this, MainActivity.class);
-        intent.setAction(ACTION_OPEN_HISTORY);
-        intent.putExtra(EXTRA_OPEN_HISTORY, true);
+        if (notification.getReserveId() != null && notification.getReserveId() > 0) {
+            intent.setAction(ACTION_OPEN_VOUCHER);
+            intent.putExtra(EXTRA_RESERVE_ID, notification.getReserveId());
+        } else {
+            intent.setAction(ACTION_OPEN_HISTORY);
+            intent.putExtra(EXTRA_OPEN_HISTORY, true);
+        }
         intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
         PendingIntent pendingIntent = PendingIntent.getActivity(
